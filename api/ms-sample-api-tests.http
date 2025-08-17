@@ -1,0 +1,20 @@
+### Health
+GET http://localhost:8080/api/health
+
+### Get todos
+GET http://localhost:8080/api/todos
+
+### Add todo
+POST http://localhost:8080/api/todos
+Content-Type: application/json
+
+{ "title": "Test from REST Client", "isDone": false }
+
+### Update todo (edit the id to one that exists)
+PUT http://localhost:8080/api/todos/1
+Content-Type: application/json
+
+{ "id": 1, "title": "Updated title from REST Client", "isDone": true }
+
+### Delete todo (edit the id to one that exists)
+DELETE http://localhost:8080/api/todos/1

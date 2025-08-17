@@ -43,7 +43,7 @@ docker compose up --build
 - `PUT /api/todos/{id}` -> update todo
 - `DELETE /api/todos/{id}` -> delete todo
 
-## Highlight's
+## Highlights
 
 - TypeScript + React UI that consumes a REST API
 - C# minimal API design and CORS
