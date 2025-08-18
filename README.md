@@ -7,6 +7,8 @@ I will continue to work on it throughout the month. - 8/17/2025
 - **Back end**: C# .NET 8 minimal API
 - **DevOps**: Dockerfiles for both, `docker-compose.yml`, and a simple GitHub Actions CI
 
+![alt text](image.png)
+
 ## Quick start (local without Docker)
 
 ### API
