@@ -42,7 +42,8 @@ API → Render
 
 Frontend → GitHub Pages
 
-![App Screenshot](<img width="2554" height="450" alt="image" src="https://github.com/user-attachments/assets/bd8d7c40-5a9e-4d8b-a8c0-62347377b97c" />)
+<img width="785" height="349" alt="image" src="https://github.com/user-attachments/assets/797f227f-d941-4238-b129-af58c6c286c0" />
+
 
 🧠 Features
 
