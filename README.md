@@ -92,13 +92,8 @@ PUT	/api/todos/{id}	Update status
 DELETE	/api/todos/{id}	Delete todo
 🧩 Architecture Overview
 
-┌────────────┐       HTTP        ┌───────────┐
-│  React UI  │ <----------------> │ .NET API │
-└────────────┘                   └───────────┘
-        │ Docker Compose (local)
-        ▼
-GitHub Actions CI  ➜  GitHub Pages (web)
-Render (api)
+<img width="696" height="334" alt="image" src="https://github.com/user-attachments/assets/5c3325d1-dccc-4aaa-933a-f08caee93287" />
+
 
 🧪 Future Enhancements
 
