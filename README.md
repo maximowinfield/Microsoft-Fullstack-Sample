@@ -1,110 +1,106 @@
-✨ Microsoft Full-Stack Sample
-React + TypeScript + .NET 8 Minimal API + Docker
+# ✨ Microsoft Full-Stack Sample  
+### React + TypeScript + .NET 8 Minimal API + Docker
 
-A clean full-stack implementation using modern Microsoft technologies — hosted for real-world deployment demonstration.
+A clean and modern implementation of Microsoft’s full-stack ecosystem — deployed and running in the cloud.
 
-🚀 Live Demo
-Component	Link
-Frontend (GitHub Pages)	🔗 https://maximowinfield.github.io/Microsoft-Fullstack-Sample/
+---
 
-Backend API (Render)	🔗 https://microsoft-fullstack-sample.onrender.com/api/todos
+## 🚀 Live Demo
 
-📌 The backend may take 3–5 seconds to wake up due to the free Render tier.
+| Component | URL |
+|---------|-----|
+| **Frontend (GitHub Pages)** | https://maximowinfield.github.io/Microsoft-Fullstack-Sample/ |
+| **Backend API (Render)** | https://microsoft-fullstack-sample.onrender.com/api/todos |
 
-🧰 Tech Stack
-Frontend
+> ⚠️ API may take 3-5 seconds to wake up on first request (free hosting tier)
 
-⚛️ React (TypeScript + Vite)
+---
 
-🎨 Modern, minimal UI
+## 🧰 Tech Stack
 
-🔌 Axios fetch to API
+### Frontend
+- React 18 + TypeScript
+- Vite build tooling
+- Axios for HTTP requests
+- React Hooks for UI logic
 
-🎯 State management with hooks
+### Backend
+- .NET 8 Minimal API
+- RESTful todo CRUD operations
+- In-memory data store (easy upgrade to EF Core + SQL)
 
-Backend
+### DevOps / Hosting
+- Docker Compose for full-stack local deployment
+- CI/CD with GitHub Actions
+- Deployed to:
+  - GitHub Pages → Frontend
+  - Render → API
 
-🧩 .NET 8 Minimal API
+---
 
-🔄 RESTful endpoints
+## 📸 Screenshot
 
-🧪 In-memory persistence (upgrade path to EF Core / SQL)
-
-DevOps / Deployment
-
-🐳 Docker multi-service structure (api + web)
-
-🔄 GitHub Actions CI/CD for web deploy
-
-🌐 Host split:
-
-API → Render
-
-Frontend → GitHub Pages
-
-<img width="785" height="349" alt="image" src="https://github.com/user-attachments/assets/797f227f-d941-4238-b129-af58c6c286c0" />
+<img width="819" height="343" alt="image" src="https://github.com/user-attachments/assets/f7c9893c-51e7-4545-b2df-8c55986a50ae" />
 
 
-🧠 Features
+---
 
-✔ Real API + real UI with persistent actions
-✔ Add / toggle / delete todos
-✔ Production deployment example using Microsoft tools
-✔ Scalable architecture ready for:
+## 🧠 Features
 
-Authentication
+- Full production deployment with real API + real UI
+- Create | Toggle | Delete todo items
+- Modern Microsoft-based architecture
+- Cloud-hosted public demo
 
-Database migration
+---
 
-Cloud infra (Azure App Service / Static Web Apps)
+## 🛠️ Running Locally
 
-🛠️ Run Locally
-1️⃣ Clone the repo
+### 1️⃣ Clone this repository
+
+```bash
 git clone https://github.com/maximowinfield/Microsoft-Fullstack-Sample.git
 cd Microsoft-Fullstack-Sample
+```
 
-2️⃣ Run using Docker Compose
-docker compose up --build
+### 2️⃣ Run using Docker Compose
 
+Once running:
 
-App available at:
-➡️ http://localhost:5173
+Frontend → http://localhost:5173
 
-API available at:
-➡️ http://localhost:8080/api/health
+API health → http://localhost:8080/api/health
 
-3️⃣ Or run manually (no Docker)
-Start API
+### 3️⃣ Run manually (without Docker)
+
+## Start backend
+```bash
 cd api
 dotnet run
-
-Start Web
+```
+## Start frontend
+```bash
 cd web
 npm install
 npm run dev
+```
 
-<img width="1378" height="569" alt="image" src="https://github.com/user-attachments/assets/ce5ffc41-df75-4dca-9c49-52d13fef48f2" />
+Then access:
+
+Frontend → http://localhost:5173
+
+API → http://localhost:8080/api/todos
+
+## 🔌 API Endpoints
+
+| Method | Route | Description |
+|--------|-------|-------------|
+| GET    | /api/health       | Health check |
+| GET    | /api/todos        | Fetch todos |
+| POST   | /api/todos        | Add a todo |
+| PUT    | /api/todos/{id}   | Toggle completion |
+| DELETE | /api/todos/{id}   | Delete a todo |
 
 
-🧩 Architecture Overview
-
-<img width="696" height="334" alt="image" src="https://github.com/user-attachments/assets/5c3325d1-dccc-4aaa-933a-f08caee93287" />
 
 
-🧪 Future Enhancements
-
-🔐 JWT Authentication + Microsoft Identity
-
-🗄️ SQL Database with EF Core
-
-☁️ Azure DevOps CI/CD
-
-🔥 Logging + diagnostics + telemetry
-
-👤 Author
-
-Maximo Winfield
-📌 Full-Stack Developer
-🔗 GitHub: https://github.com/maximowinfield
-
-🔗 LinkedIn: (Add link here if you want — great for networking!)
