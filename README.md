@@ -102,5 +102,36 @@ API → http://localhost:8080/api/todos
 | DELETE | /api/todos/{id}   | Delete a todo |
 
 
+┌────────────┐      HTTP       ┌───────────────┐
+│  React UI  │ <-------------> │ .NET 8 API    │
+└────────────┘                 └───────────────┘
+        ▲                             ▲
+        │ Docker Compose (local)      │
+        └──────────────┬──────────────┘
+                       ▼
+                  CI/CD Pipeline
+                       ▼
+     Deploy Web → GitHub Pages
+     Deploy API → Render
 
 
+
+🚀 Future Enhancements
+
+Authentication with Microsoft Identity
+
+EF Core database + cloud persistence
+
+Full Azure deployment option
+
+Logging + telemetry + observability
+
+Jest/Playwright tests integrated into CI
+
+👤 Author
+
+Maximo Winfield
+Full-Stack Developer
+
+GitHub Profile:
+https://github.com/maximowinfield
