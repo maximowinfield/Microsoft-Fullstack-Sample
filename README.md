@@ -101,7 +101,7 @@ API → http://localhost:8080/api/todos
 | PUT    | /api/todos/{id}   | Toggle completion |
 | DELETE | /api/todos/{id}   | Delete a todo |
 
-
+```text
 ┌────────────┐      HTTP       ┌───────────────┐
 │  React UI  │ <-------------> │ .NET 8 API    │
 └────────────┘                 └───────────────┘
@@ -113,7 +113,7 @@ API → http://localhost:8080/api/todos
                        ▼
      Deploy Web → GitHub Pages
      Deploy API → Render
-
+```
 
 
 🚀 Future Enhancements
