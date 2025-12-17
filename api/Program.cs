@@ -62,21 +62,14 @@ var app = builder.Build();
 
 // 1) CORS first (so headers get added)
 app.UseCors("Frontend");
-
-// 2) Short-circuit OPTIONS preflight BEFORE auth
-app.Use(async (ctx, next) =>
-{
-    if (HttpMethods.IsOptions(ctx.Request.Method))
-    {
-        ctx.Response.StatusCode = StatusCodes.Status200OK;
-        return;
-    }
-    await next();
-});
-
-// 3) Auth after preflight handling
 app.UseAuthentication();
 app.UseAuthorization();
+
+// Explicit OPTIONS handler for any /api/* route (fixes preflight on Render)
+app.MapMethods("/api/{*path}", new[] { "OPTIONS" }, () => Results.Ok())
+   .RequireCors("Frontend")
+   .AllowAnonymous();
+
 
 
 
