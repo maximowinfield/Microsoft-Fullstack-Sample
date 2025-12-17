@@ -66,6 +66,10 @@ app.UseCors("Frontend");
 app.UseAuthentication();
 app.UseAuthorization();
 
+// Handle CORS preflight requests
+app.MapMethods("{*path}", new[] { "OPTIONS" }, () => Results.Ok());
+
+
 // Helper: create JWT tokens
 string CreateToken(string subjectId, string role, string? kidId = null, string? parentId = null)
 {
@@ -136,7 +140,20 @@ using (var scope = app.Services.CreateScope())
     }
 
 
-    var firstParentId = db.Users.Where(u => u.Role == "Parent").Select(u => u.Id).First();
+    var firstParentId = db.Users.Where(u => u.Role == "Parent").Select(u => u.Id).FirstOrDefault();
+    if (string.IsNullOrWhiteSpace(firstParentId))
+    {
+        Console.WriteLine("No parent users found; skipping kid seed.");
+    }
+    else if (!db.Kids.Any())
+    {
+        db.Kids.AddRange(
+           new KidProfile { Id = "kid-1", ParentId = firstParentId, DisplayName = "Kid 1" },
+          new KidProfile { Id = "kid-2", ParentId = firstParentId, DisplayName = "Kid 2" }
+         );
+        db.SaveChanges();
+    }
+
 
     // Seed kids once (owned by first parent)
     if (!db.Kids.Any())

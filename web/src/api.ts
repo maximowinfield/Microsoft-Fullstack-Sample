@@ -35,3 +35,4 @@ export const createTask = async (payload: CreateTaskRequest) =>
 
 export const createReward = async (payload: CreateRewardRequest) =>
   (await api.post<Reward>("/api/rewards", payload)).data;
+
