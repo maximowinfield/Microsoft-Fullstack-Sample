@@ -128,6 +128,8 @@ GET	/api/todos	Fetch todos
 POST	/api/todos	Create a todo
 PUT	/api/todos/{id}	Update a todo
 DELETE	/api/todos/{id}	Delete a todo
+
+``` bash
 ┌────────────┐      HTTP       ┌───────────────┐
 │  React UI  │ <------------> │ .NET 8 API    │
 └────────────┘                └───────────────┘
@@ -139,6 +141,7 @@ DELETE	/api/todos/{id}	Delete a todo
                        ▼
      Deploy Web → GitHub Pages
      Deploy API → Render
+```
 
 ### 🚀 Future Enhancements
 
