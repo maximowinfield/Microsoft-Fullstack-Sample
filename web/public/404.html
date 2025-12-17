@@ -4,27 +4,18 @@
     <meta charset="utf-8" />
     <title>Redirecting...</title>
     <script>
-      // GitHub Pages SPA redirect (project site)
-      // Repo base path:
-      var base = "/Microsoft-Fullstack-Sample";
+      // GitHub Pages SPA fallback:
+      // send /Microsoft-Fullstack-Sample/todos -> /Microsoft-Fullstack-Sample/?p=/todos
+      (function () {
+        var base = "/Microsoft-Fullstack-Sample";
+        var path = window.location.pathname;
 
-      // Current path (includes base when hosted on GH Pages)
-      var path = window.location.pathname;
+        // Remove the base only once, so we keep the actual route (/todos or /kids)
+        if (path.startsWith(base)) path = path.slice(base.length);
 
-      // Strip the base from the front so we keep only the "SPA route"
-      if (path.startsWith(base)) path = path.slice(base.length);
-
-      // If empty, treat as root
-      if (!path) path = "/";
-
-      // Send it to index.html with a query param so the SPA can restore it
-      var redirectUrl =
-        window.location.origin +
-        base +
-        "/?p=" +
-        encodeURIComponent(path + window.location.search + window.location.hash);
-
-      window.location.replace(redirectUrl);
+        var redirect = base + "/?p=" + encodeURIComponent(path + window.location.search + window.location.hash);
+        window.location.replace(redirect);
+      })();
     </script>
   </head>
   <body></body>
