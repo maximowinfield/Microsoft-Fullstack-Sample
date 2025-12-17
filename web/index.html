@@ -1,12 +1,30 @@
 <!doctype html>
 <html lang="en">
   <head>
+    <script>
+     (function () {
+      const params = new URLSearchParams(window.location.search);
+      const p = params.get("p");
+      if (p) {
+      params.delete("p");
+      const newUrl =
+        window.location.pathname +
+        decodeURIComponent(p) +
+        (params.toString() ? "?" + params.toString() : "") +
+        window.location.hash;
+
+        window.history.replaceState(null, "", newUrl);
+    }
+  })();
+    </script>
+
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>MS Fullstack Sample</title>
   </head>
   <body>
     <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
+    <script type="module" src="./src/main.tsx"></script>
+
   </body>
 </html>

@@ -4,11 +4,27 @@
     <meta charset="utf-8" />
     <title>Redirecting...</title>
     <script>
-      // Preserve the path on refresh for GitHub Pages SPAs
-      var path = location.pathname;
+      // GitHub Pages SPA redirect (project site)
+      // Repo base path:
       var base = "/Microsoft-Fullstack-Sample";
+
+      // Current path (includes base when hosted on GH Pages)
+      var path = window.location.pathname;
+
+      // Strip the base from the front so we keep only the "SPA route"
       if (path.startsWith(base)) path = path.slice(base.length);
-      location.replace(base + "/?p=" + encodeURIComponent(path + location.search + location.hash));
+
+      // If empty, treat as root
+      if (!path) path = "/";
+
+      // Send it to index.html with a query param so the SPA can restore it
+      var redirectUrl =
+        window.location.origin +
+        base +
+        "/?p=" +
+        encodeURIComponent(path + window.location.search + window.location.hash);
+
+      window.location.replace(redirectUrl);
     </script>
   </head>
   <body></body>
