@@ -1,29 +1,28 @@
 import { useAuth } from "../context/AuthContext";
+import { apiFetch } from "../services/api";
 
 export default function SelectKid() {
   const { auth, setAuth } = useAuth();
 
   async function enterKidMode(kidId: string, displayName: string) {
-    const res = await fetch("/api/kid-session", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${auth.token}`,
-      },
-      body: JSON.stringify({ kidId }),
-    });
+    try {
+      const data = await apiFetch("/api/kid-session", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${auth.token}`,
+        },
+        body: JSON.stringify({ kidId }),
+      });
 
-    if (!res.ok) {
-      alert("Failed to enter kid mode");
-      return;
+      setAuth({
+        token: data.token,
+        role: "Kid",
+        kidName: displayName,
+      });
+    } catch (err: any) {
+      alert(err.message || "Failed to enter kid mode");
     }
-
-    const data = await res.json();
-    setAuth({
-      token: data.token,
-      role: "Kid",
-      kidName: displayName,
-    });
   }
 
   return (

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
-
+import { apiFetch } from "../services/api";
 
 export default function Login() {
   const { setAuth } = useAuth();
@@ -8,21 +8,31 @@ export default function Login() {
   const [password, setPassword] = useState("");
 
   async function login() {
-    const res = await fetch("/api/parent/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username, password }),
-    });
+    try {
+      const data = await apiFetch("/api/parent/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password }),
+      });
 
-    const data = await res.json();
-    setAuth({ token: data.token, role: "Parent" });
+      setAuth({ token: data.token, role: "Parent" });
+    } catch (err: any) {
+      alert(err.message || "Login failed");
+    }
   }
 
   return (
     <div>
       <h2>Parent Login</h2>
-      <input onChange={e => setUsername(e.target.value)} />
-      <input type="password" onChange={e => setPassword(e.target.value)} />
+      <input
+        placeholder="Username"
+        onChange={(e) => setUsername(e.target.value)}
+      />
+      <input
+        type="password"
+        placeholder="Password"
+        onChange={(e) => setPassword(e.target.value)}
+      />
       <button onClick={login}>Login</button>
     </div>
   );
