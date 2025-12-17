@@ -18,14 +18,12 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("Frontend", policy =>
-        policy.WithOrigins(
-                "https://maximowinfield.github.io",
-                "http://localhost:5173"
-            )
-            .AllowAnyHeader()
-            .AllowAnyMethod()
+        policy.WithOrigins("https://maximowinfield.github.io", "http://localhost:5173")
+              .AllowAnyHeader()
+              .AllowAnyMethod()
     );
 });
+
 
 
 // EF Core + SQLite
@@ -62,12 +60,24 @@ builder.Services.AddAuthorization(options =>
 
 var app = builder.Build();
 
+// 1) CORS first (so headers get added)
 app.UseCors("Frontend");
+
+// 2) Short-circuit OPTIONS preflight BEFORE auth
+app.Use(async (ctx, next) =>
+{
+    if (HttpMethods.IsOptions(ctx.Request.Method))
+    {
+        ctx.Response.StatusCode = StatusCodes.Status200OK;
+        return;
+    }
+    await next();
+});
+
+// 3) Auth after preflight handling
 app.UseAuthentication();
 app.UseAuthorization();
 
-// Handle CORS preflight requests
-app.MapMethods("{*path}", new[] { "OPTIONS" }, () => Results.Ok());
 
 
 // Helper: create JWT tokens
@@ -156,14 +166,6 @@ using (var scope = app.Services.CreateScope())
 
 
     // Seed kids once (owned by first parent)
-    if (!db.Kids.Any())
-    {
-        db.Kids.AddRange(
-            new KidProfile { Id = "kid-1", ParentId = firstParentId, DisplayName = "Kid 1" },
-            new KidProfile { Id = "kid-2", ParentId = firstParentId, DisplayName = "Kid 2" }
-        );
-        db.SaveChanges();
-    }
 }
 
 app.MapGet("/api/health", () => Results.Ok(new { status = "ok" }));
