@@ -11,9 +11,10 @@ export default function App() {
       </div>
 
       <Routes>
-        <Route index element={<Navigate to="/kids" replace />} />
-        <Route path="kids" element={<KidsRewardsPage />} />
-        <Route path="todos" element={<TodosPage />} />
+        <Route path="/" element={<Navigate to="/kids" replace />} />
+        <Route path="/kids" element={<KidsRewardsPage />} />
+        <Route path="/todos" element={<TodosPage />} />
+        <Route path="*" element={<Navigate to="/kids" replace />} />
       </Routes>
     </div>
   );
