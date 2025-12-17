@@ -9,6 +9,8 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Storage;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -89,18 +91,41 @@ using (var scope = app.Services.CreateScope())
     var hasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher<AppUser>>();
 
     // Seed 2 parents if none exist
-    if (!db.Users.Any(u => u.Role == "Parent"))
+    // ---- Seed default parents (Option B) ----
+    try
     {
-        // Change these credentials immediately
-        var p1 = new AppUser { Id = Guid.NewGuid().ToString(), Username = "parent1", Role = "Parent" };
-        p1.PasswordHash = hasher.HashPassword(p1, "ChangeMe123!");
+        var databaseCreator = db.Database.GetService<IRelationalDatabaseCreator>();
 
-        var p2 = new AppUser { Id = Guid.NewGuid().ToString(), Username = "parent2", Role = "Parent" };
-        p2.PasswordHash = hasher.HashPassword(p2, "ChangeMe123!");
+        if (databaseCreator.HasTables())
+        {
+            if (!db.Users.Any(u => u.Role == "Parent"))
+            {
+                var p1 = new AppUser
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    Username = "parent1",
+                    Role = "Parent"
+                };
+                p1.PasswordHash = hasher.HashPassword(p1, "ChangeMe123!");
 
-        db.Users.AddRange(p1, p2);
-        db.SaveChanges();
+                var p2 = new AppUser
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    Username = "parent2",
+                    Role = "Parent"
+                };
+                p2.PasswordHash = hasher.HashPassword(p2, "ChangeMe123!");
+
+                db.Users.AddRange(p1, p2);
+                db.SaveChanges();
+            }
+        }
     }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"User seed skipped: {ex.Message}");
+    }
+
 
     var firstParentId = db.Users.Where(u => u.Role == "Parent").Select(u => u.Id).First();
 
