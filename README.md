@@ -26,8 +26,10 @@ A clean and modern implementation of Microsoft’s full-stack ecosystem — depl
 
 ### Backend
 - .NET 8 Minimal API
-- RESTful todo CRUD operations
-- In-memory data store (easy upgrade to EF Core + SQL)
+- RESTful API for todos, kids, tasks, rewards, and redemptions
+- Entity Framework Core with SQLite persistence
+- Automatic database initialization and migrations
+
 
 ### DevOps / Hosting
 - Docker Compose for full-stack local deployment
@@ -35,6 +37,19 @@ A clean and modern implementation of Microsoft’s full-stack ecosystem — depl
 - Deployed to:
   - GitHub Pages → Frontend
   - Render → API
+  
+---
+## 🧩 Architecture Overview
+
+This project demonstrates a clean separation of concerns:
+
+- React frontend deployed via GitHub Pages
+- .NET 8 Minimal API deployed independently
+- EF Core manages persistence and domain models
+- Docker Compose enables full local stack execution
+- CI/CD pipelines automate builds and deployments
+
+The architecture mirrors real-world Microsoft full-stack production setups.
 
 ---
 
@@ -48,9 +63,13 @@ A clean and modern implementation of Microsoft’s full-stack ecosystem — depl
 ## 🧠 Features
 
 - Full production deployment with real API + real UI
-- Create | Toggle | Delete todo items
-- Modern Microsoft-based architecture
-- Cloud-hosted public demo
+- Persistent data storage using EF Core + SQLite
+- Kids task system with point tracking
+- Parent-managed tasks and rewards
+- Reward redemption with point validation
+- Todo list with full CRUD support
+- Modern Microsoft-based full-stack architecture
+
 
 ---
 
@@ -93,6 +112,9 @@ API → http://localhost:8080/api/todos
 
 ## 🔌 API Endpoints
 
+> The API includes endpoints for kids, tasks, rewards, points, and redemptions.  
+> Below are the core endpoints used by the demo UI.
+
 | Method | Route | Description |
 |--------|-------|-------------|
 | GET    | /api/health       | Health check |
@@ -118,15 +140,13 @@ API → http://localhost:8080/api/todos
 
 🚀 Future Enhancements
 
-Authentication with Microsoft Identity
+🚀 Future Enhancements
 
-EF Core database + cloud persistence
-
-Full Azure deployment option
-
-Logging + telemetry + observability
-
-Jest/Playwright tests integrated into CI
+- Role-based authentication (parent vs kid)
+- EF Core migrations hosted in cloud SQL (Azure / PostgreSQL)
+- Logging, telemetry, and observability
+- Automated frontend and API tests (Playwright / xUnit)
+- Optional Azure deployment with Microsoft Identity
 
 👤 Author
 
