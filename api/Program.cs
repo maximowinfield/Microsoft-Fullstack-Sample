@@ -157,6 +157,56 @@ using (var scope = app.Services.CreateScope())
         );
         db.SaveChanges();
     }
+    // ✅ Seed default rewards if none exist
+    if (!db.Rewards.Any())
+    {
+        db.Rewards.AddRange(
+            new Reward { Name = "Ice Cream", Cost = 100 },
+            new Reward { Name = "Extra Screen Time", Cost = 50 },
+            new Reward { Name = "Movie Night", Cost = 150 }
+        );
+        db.SaveChanges();
+    }
+
+    // ✅ Seed default tasks if none exist
+    // (Only seed tasks if the database has zero tasks total, to avoid duplicating)
+    if (!db.Tasks.Any())
+    {
+        db.Tasks.AddRange(
+            new KidTask
+            {
+                Title = "Brush Teeth",
+                Points = 50,
+                AssignedKidId = "kid-1",
+                CreatedByParentId = parentId,
+                IsComplete = false,
+                CompletedAt = null
+            },
+            new KidTask
+            {
+                Title = "Go to School",
+                Points = 50,
+                AssignedKidId = "kid-1",
+                CreatedByParentId = parentId,
+                IsComplete = false,
+                CompletedAt = null
+            },
+            new KidTask
+            {
+                Title = "Homework",
+                Points = 50,
+                AssignedKidId = "kid-2",
+                CreatedByParentId = parentId,
+                IsComplete = false,
+                CompletedAt = null
+            }
+        );
+        db.SaveChanges();
+    }
+
+
+
+
 }
 // -------------------------------------------------------------------------------
 
