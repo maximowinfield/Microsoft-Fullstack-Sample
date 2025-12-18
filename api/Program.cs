@@ -73,10 +73,16 @@ builder.Services.AddAuthorization(options =>
 var app = builder.Build();
 app.MapGet("/__version", () => Results.Text("CORS-GROUP-V1")).AllowAnonymous();
 
+// -------------------- ✅ SPA Static Files (single-domain hosting) --------------------
+// If you copy your React build into api/wwwroot, this will serve it at https://yourdomain.com/
+app.UseDefaultFiles();   // serves index.html by default if present
+app.UseStaticFiles();    // serves /assets/* etc from wwwroot
+// -----------------------------------------------------------------------------
+
 // Routing + Middleware order matters
 app.UseRouting();
 
-// CORS must be before auth so headers get added
+// CORS must be before auth so headers get added (mainly needed for localhost Vite dev)
 app.UseCors("Frontend");
 
 app.UseAuthentication();
@@ -503,5 +509,9 @@ api.MapDelete("/todos/{id:int}", async (AppDbContext db, int id) =>
     await db.SaveChangesAsync();
     return Results.NoContent();
 });
+
+// -------------------- ✅ SPA fallback (deep links) --------------------
+// Anything not matching /api/* will serve the React app (index.html).
+app.MapFallbackToFile("index.html");
 
 app.Run();
