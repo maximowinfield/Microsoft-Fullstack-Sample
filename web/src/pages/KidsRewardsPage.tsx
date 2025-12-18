@@ -9,7 +9,12 @@ import {
   redeemReward,
   createTask,
   createReward,
+  updateTask,
+  deleteTask,
+  updateReward,
+  deleteReward,
 } from "../api";
+
 import { useAuth } from "../context/AuthContext";
 
 export default function KidsRewardsPage() {
@@ -32,6 +37,98 @@ export default function KidsRewardsPage() {
 
   // ✅ Option A: kidId comes from the URL
   const effectiveKidId = useMemo(() => kidId ?? "", [kidId]);
+
+  // ✅ Inline edit state
+  const [editingTaskId, setEditingTaskId] = useState<number | null>(null);
+  const [editTaskTitle, setEditTaskTitle] = useState("");
+  const [editTaskPoints, setEditTaskPoints] = useState(0);
+
+  const [editingRewardId, setEditingRewardId] = useState<number | null>(null);
+  const [editRewardName, setEditRewardName] = useState("");
+  const [editRewardCost, setEditRewardCost] = useState(0);
+
+
+  function startEditTask(t: KidTask) {
+  setEditingTaskId(t.id);
+  setEditTaskTitle(t.title);
+  setEditTaskPoints(t.points);
+}
+
+function cancelEditTask() {
+  setEditingTaskId(null);
+  setEditTaskTitle("");
+  setEditTaskPoints(0);
+}
+
+async function onSaveTask(id: number) {
+  try {
+    setError(null);
+    await updateTask(id, {
+      title: editTaskTitle.trim(),
+      points: Number(editTaskPoints) || 0,
+      assignedKidId: effectiveKidId, // keep it assigned to the current kid page
+    });
+    cancelEditTask();
+    await loadAll(effectiveKidId);
+  } catch (e: any) {
+    console.error("updateTask failed:", e);
+    setError(e?.message ?? String(e));
+  }
+}
+
+async function onDeleteTask(id: number) {
+  if (!confirm("Delete this task?")) return;
+
+  try {
+    setError(null);
+    await deleteTask(id);
+    await loadAll(effectiveKidId);
+  } catch (e: any) {
+    console.error("deleteTask failed:", e);
+    setError(e?.message ?? String(e));
+  }
+}
+
+function startEditReward(r: Reward) {
+  setEditingRewardId(r.id);
+  setEditRewardName(r.name);
+  setEditRewardCost(r.cost);
+}
+
+function cancelEditReward() {
+  setEditingRewardId(null);
+  setEditRewardName("");
+  setEditRewardCost(0);
+}
+
+async function onSaveReward(id: number) {
+  try {
+    setError(null);
+    await updateReward(id, {
+      name: editRewardName.trim(),
+      cost: Number(editRewardCost) || 0,
+    });
+    cancelEditReward();
+    await loadAll(effectiveKidId);
+  } catch (e: any) {
+    console.error("updateReward failed:", e);
+    setError(e?.message ?? String(e));
+  }
+}
+
+async function onDeleteReward(id: number) {
+  if (!confirm("Delete this reward?")) return;
+
+  try {
+    setError(null);
+    await deleteReward(id);
+    await loadAll(effectiveKidId);
+  } catch (e: any) {
+    console.error("deleteReward failed:", e);
+    setError(e?.message ?? String(e));
+  }
+}
+
 
   async function loadAll(id: string) {
     const [t, p, r] = await Promise.all([getTasks(id), getPoints(id), getRewards()]);
@@ -209,31 +306,70 @@ export default function KidsRewardsPage() {
         ) : (
           <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
             {tasks.map((t) => (
-              <li
-                key={t.id}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 10,
-                  padding: 10,
-                  borderBottom: "1px solid #f1f1f1",
-                }}
-              >
-                <span style={{ flex: 1, textDecoration: t.isComplete ? "line-through" : "none" }}>
-                  {t.title} <span style={{ opacity: 0.7 }}>({t.points} pts)</span>
-                </span>
+<li
+  key={t.id}
+  style={{
+    display: "flex",
+    alignItems: "center",
+    gap: 10,
+    padding: 10,
+    borderBottom: "1px solid #f1f1f1",
+  }}
+>
+  {/* Left side */}
+  <div style={{ flex: 1 }}>
+    {editingTaskId === t.id ? (
+      <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+        <input
+          value={editTaskTitle}
+          onChange={(e) => setEditTaskTitle(e.target.value)}
+          style={{ padding: 6, borderRadius: 8, border: "1px solid #ccc", flex: 1 }}
+        />
+        <input
+          type="number"
+          value={editTaskPoints}
+          onChange={(e) => setEditTaskPoints(Number(e.target.value))}
+          min={0}
+          style={{ padding: 6, borderRadius: 8, border: "1px solid #ccc", width: 90 }}
+        />
+      </div>
+    ) : (
+      <span style={{ textDecoration: t.isComplete ? "line-through" : "none" }}>
+        {t.title} <span style={{ opacity: 0.7 }}>({t.points} pts)</span>
+      </span>
+    )}
+  </div>
 
-                {t.isComplete ? (
-                  <span style={{ fontSize: 12, opacity: 0.7 }}>Completed</span>
-                ) : (
-                  <button
-                    onClick={() => onCompleteTask(t.id)}
-                    style={{ padding: "6px 10px", borderRadius: 8 }}
-                  >
-                    Complete
-                  </button>
-                )}
-              </li>
+  {/* Right side actions */}
+  {auth?.activeRole === "Parent" ? (
+    editingTaskId === t.id ? (
+      <div style={{ display: "flex", gap: 8 }}>
+        <button onClick={() => onSaveTask(t.id)} style={{ padding: "6px 10px", borderRadius: 8 }}>
+          Save
+        </button>
+        <button onClick={cancelEditTask} style={{ padding: "6px 10px", borderRadius: 8 }}>
+          Cancel
+        </button>
+      </div>
+    ) : (
+      <div style={{ display: "flex", gap: 8 }}>
+        <button onClick={() => startEditTask(t)} style={{ padding: "6px 10px", borderRadius: 8 }}>
+          Edit
+        </button>
+        <button onClick={() => onDeleteTask(t.id)} style={{ padding: "6px 10px", borderRadius: 8 }}>
+          Delete
+        </button>
+      </div>
+    )
+  ) : t.isComplete ? (
+    <span style={{ fontSize: 12, opacity: 0.7 }}>Completed</span>
+  ) : (
+    <button onClick={() => onCompleteTask(t.id)} style={{ padding: "6px 10px", borderRadius: 8 }}>
+      Complete
+    </button>
+  )}
+</li>
+
             ))}
           </ul>
         )}
@@ -248,28 +384,70 @@ export default function KidsRewardsPage() {
         ) : (
           <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
             {rewards.map((r) => (
-              <li
-                key={r.id}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 10,
-                  padding: 10,
-                  borderBottom: "1px solid #f1f1f1",
-                }}
-              >
-                <span style={{ flex: 1 }}>
-                  {r.name} <span style={{ opacity: 0.7 }}>({r.cost} pts)</span>
-                </span>
+<li
+  key={r.id}
+  style={{
+    display: "flex",
+    alignItems: "center",
+    gap: 10,
+    padding: 10,
+    borderBottom: "1px solid #f1f1f1",
+  }}
+>
+  <div style={{ flex: 1 }}>
+    {editingRewardId === r.id ? (
+      <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+        <input
+          value={editRewardName}
+          onChange={(e) => setEditRewardName(e.target.value)}
+          style={{ padding: 6, borderRadius: 8, border: "1px solid #ccc", flex: 1 }}
+        />
+        <input
+          type="number"
+          value={editRewardCost}
+          onChange={(e) => setEditRewardCost(Number(e.target.value))}
+          min={0}
+          style={{ padding: 6, borderRadius: 8, border: "1px solid #ccc", width: 90 }}
+        />
+      </div>
+    ) : (
+      <span>
+        {r.name} <span style={{ opacity: 0.7 }}>({r.cost} pts)</span>
+      </span>
+    )}
+  </div>
 
-                <button
-                  disabled={points < r.cost}
-                  onClick={() => onRedeem(r.id)}
-                  style={{ padding: "6px 10px", borderRadius: 8 }}
-                >
-                  Redeem
-                </button>
-              </li>
+  {auth?.activeRole === "Parent" ? (
+    editingRewardId === r.id ? (
+      <div style={{ display: "flex", gap: 8 }}>
+        <button onClick={() => onSaveReward(r.id)} style={{ padding: "6px 10px", borderRadius: 8 }}>
+          Save
+        </button>
+        <button onClick={cancelEditReward} style={{ padding: "6px 10px", borderRadius: 8 }}>
+          Cancel
+        </button>
+      </div>
+    ) : (
+      <div style={{ display: "flex", gap: 8 }}>
+        <button onClick={() => startEditReward(r)} style={{ padding: "6px 10px", borderRadius: 8 }}>
+          Edit
+        </button>
+        <button onClick={() => onDeleteReward(r.id)} style={{ padding: "6px 10px", borderRadius: 8 }}>
+          Delete
+        </button>
+      </div>
+    )
+  ) : (
+    <button
+      disabled={points < r.cost}
+      onClick={() => onRedeem(r.id)}
+      style={{ padding: "6px 10px", borderRadius: 8 }}
+    >
+      Redeem
+    </button>
+  )}
+</li>
+
             ))}
           </ul>
         )}

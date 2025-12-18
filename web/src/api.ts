@@ -40,6 +40,31 @@ export const createReward = async (payload: CreateRewardRequest) =>
 
 export type ParentLoginRequest = { username: string; password: string };
 export type ParentLoginResponse = { token: string; role: "Parent" };
+// ✅ UPDATE / DELETE (Tasks)
+export type UpdateTaskRequest = {
+  title?: string;
+  points?: number;
+  assignedKidId?: string;
+};
+
+export const updateTask = async (id: number, payload: UpdateTaskRequest) =>
+  (await api.put<KidTask>(`/tasks/${id}`, payload)).data;
+
+export const deleteTask = async (id: number) =>
+  (await api.delete(`/tasks/${id}`)).data;
+
+// ✅ UPDATE / DELETE (Rewards)
+export type UpdateRewardRequest = {
+  name?: string;
+  cost?: number;
+};
+
+export const updateReward = async (id: number, payload: UpdateRewardRequest) =>
+  (await api.put<Reward>(`/rewards/${id}`, payload)).data;
+
+export const deleteReward = async (id: number) =>
+  (await api.delete(`/rewards/${id}`)).data;
+
 
 export const parentLogin = async (payload: ParentLoginRequest) =>
   (await api.post<ParentLoginResponse>("/parent/login", payload)).data;

@@ -367,23 +367,40 @@ api.MapPut("/tasks/{id:int}", async (ClaimsPrincipal principal, AppDbContext db,
     if (string.IsNullOrWhiteSpace(parentId)) return Results.Unauthorized();
 
     var task = await db.Tasks.FirstOrDefaultAsync(t => t.Id == id && t.CreatedByParentId == parentId);
-    if (task is null) return Results.NotFound();
+    if (task is null) return Results.NotFound("Task not found.");
 
-    // If reassigning, ensure kid belongs to this parent
-    if (!string.IsNullOrWhiteSpace(req.AssignedKidId))
+    // Title
+    if (req.Title is not null)
     {
-        var kidOwned = await db.Kids.AnyAsync(k => k.Id == req.AssignedKidId && k.ParentId == parentId);
-        if (!kidOwned) return Results.BadRequest("Unknown kidId for this parent.");
-        task.AssignedKidId = req.AssignedKidId;
+        var title = req.Title.Trim();
+        if (string.IsNullOrWhiteSpace(title)) return Results.BadRequest("Title cannot be empty.");
+        task.Title = title;
     }
 
-    task.Title = (req.Title ?? task.Title).Trim();
-    task.Points = req.Points ?? task.Points;
+    // Points
+    if (req.Points is not null)
+    {
+        if (req.Points.Value < 0) return Results.BadRequest("Points must be >= 0.");
+        task.Points = req.Points.Value;
+    }
+
+    // Reassign kid (must belong to same parent)
+    if (req.AssignedKidId is not null)
+    {
+        var newKidId = req.AssignedKidId.Trim();
+        if (string.IsNullOrWhiteSpace(newKidId)) return Results.BadRequest("AssignedKidId cannot be empty.");
+
+        var kidOwned = await db.Kids.AnyAsync(k => k.Id == newKidId && k.ParentId == parentId);
+        if (!kidOwned) return Results.BadRequest("Unknown kidId for this parent.");
+
+        task.AssignedKidId = newKidId;
+    }
 
     await db.SaveChangesAsync();
     return Results.Ok(task);
 })
 .RequireAuthorization("ParentOnly");
+
 
 api.MapPut("/tasks/{id:int}/complete", async (ClaimsPrincipal principal, AppDbContext db, int id) =>
 {
@@ -476,15 +493,26 @@ api.MapPost("/rewards", async (AppDbContext db, CreateRewardRequest req) =>
 api.MapPut("/rewards/{id:int}", async (AppDbContext db, int id, UpdateRewardRequest req) =>
 {
     var reward = await db.Rewards.FirstOrDefaultAsync(r => r.Id == id);
-    if (reward is null) return Results.NotFound();
+    if (reward is null) return Results.NotFound("Reward not found.");
 
-    reward.Name = (req.Name ?? reward.Name).Trim();
-    reward.Cost = req.Cost ?? reward.Cost;
+    if (req.Name is not null)
+    {
+        var name = req.Name.Trim();
+        if (string.IsNullOrWhiteSpace(name)) return Results.BadRequest("Name cannot be empty.");
+        reward.Name = name;
+    }
+
+    if (req.Cost is not null)
+    {
+        if (req.Cost.Value < 0) return Results.BadRequest("Cost must be >= 0.");
+        reward.Cost = req.Cost.Value;
+    }
 
     await db.SaveChangesAsync();
     return Results.Ok(reward);
 })
 .RequireAuthorization("ParentOnly");
+
 
 // ✅ NEW: Parent deletes a reward
 api.MapDelete("/rewards/{id:int}", async (AppDbContext db, int id) =>
