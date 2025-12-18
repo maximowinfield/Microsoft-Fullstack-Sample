@@ -8,6 +8,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using System.IO;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -28,6 +29,16 @@ builder.Services.AddCors(options =>
 
 // ✅ EF Core + SQLite (Render persistent disk via DB_PATH)
 var dbPath = Environment.GetEnvironmentVariable("DB_PATH") ?? "app.db";
+
+// If DB_PATH includes a directory (Render: /var/data/app.db), ensure it exists
+var dbDir = Path.GetDirectoryName(dbPath);
+if (!string.IsNullOrWhiteSpace(dbDir))
+{
+    Directory.CreateDirectory(dbDir);
+}
+
+Console.WriteLine($"[DB] Using SQLite at: {dbPath}");
+
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite($"Data Source={dbPath}"));
 
@@ -65,6 +76,7 @@ builder.Services.AddAuthorization(options =>
 });
 
 var app = builder.Build();
+
 app.MapGet("/__version", () => Results.Text("CORS-GROUP-V1")).AllowAnonymous();
 
 // -------------------- ✅ SPA Static Files (single-domain hosting) --------------------
@@ -149,8 +161,7 @@ using (var scope = app.Services.CreateScope())
     var parentId = parent.Id;
 
     // Ensure default kids exist for that parent (kid-1 / kid-2)
-    var hasKidsForParent = db.Kids.Any(k => k.ParentId == parentId);
-    if (!hasKidsForParent)
+    if (!db.Kids.Any(k => k.ParentId == parentId))
     {
         db.Kids.AddRange(
             new KidProfile { Id = "kid-1", ParentId = parentId, DisplayName = "Kid 1" },
@@ -170,7 +181,7 @@ using (var scope = app.Services.CreateScope())
         db.SaveChanges();
     }
 
-    // Seed default tasks if none exist (avoid duplicating on every deploy)
+    // Seed default tasks if none exist (avoid duplicating)
     if (!db.Tasks.Any())
     {
         db.Tasks.AddRange(
