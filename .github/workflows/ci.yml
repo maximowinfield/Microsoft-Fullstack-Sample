@@ -2,9 +2,9 @@ name: ci
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   api:
@@ -14,16 +14,20 @@ jobs:
         working-directory: api
     steps:
       - uses: actions/checkout@v4
+
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '8.0.x'
+          dotnet-version: "8.0.x"
+
       - name: Restore
-        run: dotnet restore
+        run: dotnet restore ./msfullstacksample.api.csproj
+
       - name: Build
-        run: dotnet build --configuration Release --no-restore
+        run: dotnet build ./msfullstacksample.api.csproj --configuration Release --no-restore
+
       - name: Publish
-        run: dotnet publish -c Release -o out
+        run: dotnet publish ./msfullstacksample.api.csproj -c Release --no-build -o out
 
   web:
     runs-on: ubuntu-latest
@@ -32,14 +36,17 @@ jobs:
         working-directory: web
     steps:
       - uses: actions/checkout@v4
+
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
-          cache: 'npm'
+          node-version: "18"
+          cache: "npm"
           cache-dependency-path: web/package-lock.json
+
       - name: Install
         run: npm ci || npm i
+
       - name: Build
         run: |
           echo "VITE_API_URL=http://localhost:8080" > .env.production
