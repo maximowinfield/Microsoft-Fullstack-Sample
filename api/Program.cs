@@ -1,18 +1,13 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.EntityFrameworkCore;
-using System.Linq;
-using System.Text;
-using System.Security.Claims;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
-using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.EntityFrameworkCore.Storage;
-
-// ✅ Type declarations MUST be before top-level statements (fixes CS8803)
+using System.Security.Claims;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -57,11 +52,7 @@ builder.Services
             IssuerSigningKey = jwtKey,
             ValidateLifetime = true,
             ClockSkew = TimeSpan.FromMinutes(1),
-
-            // Role policy reads ClaimTypes.Role
             RoleClaimType = ClaimTypes.Role,
-
-            // NameIdentifier mapping can vary; we'll set it explicitly
             NameClaimType = ClaimTypes.NameIdentifier
         };
     });
@@ -76,22 +67,23 @@ var app = builder.Build();
 app.MapGet("/__version", () => Results.Text("CORS-GROUP-V1")).AllowAnonymous();
 
 // -------------------- ✅ SPA Static Files (single-domain hosting) --------------------
-app.UseDefaultFiles();   // serves index.html by default if present
-app.UseStaticFiles();    // serves /assets/* etc from wwwroot
+app.UseDefaultFiles();
+app.UseStaticFiles();
 // -----------------------------------------------------------------------------
+
 
 // Routing + Middleware order matters
 app.UseRouting();
 
-// CORS must be before auth so headers get added (mainly needed for localhost Vite dev)
+// CORS must be before auth so headers get added
 app.UseCors("Frontend");
 
 app.UseAuthentication();
 app.UseAuthorization();
 
-// All /api routes MUST go through this group to inherit CORS reliably
+// All /api routes go through this group
 var api = app.MapGroup("/api")
-             .RequireCors("Frontend");
+    .RequireCors("Frontend");
 
 // Preflight handler for anything under /api/*
 api.MapMethods("/{*path}", new[] { "OPTIONS" }, () => Results.Ok())
@@ -130,7 +122,7 @@ string CreateToken(string subjectId, string role, string? kidId = null, string? 
     return new JwtSecurityTokenHandler().WriteToken(token);
 }
 
-// Ensure DB exists + apply migrations + seed parents/kids once
+// -------------------- ✅ Database migrate + deterministic seed --------------------
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
@@ -138,61 +130,44 @@ using (var scope = app.Services.CreateScope())
 
     var hasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher<AppUser>>();
 
-    try
+    // Ensure default parent exists
+    var parent = db.Users.FirstOrDefault(u => u.Username == "parent1" && u.Role == "Parent");
+    if (parent == null)
     {
-        var databaseCreator = db.Database.GetService<IRelationalDatabaseCreator>();
-
-        if (databaseCreator.HasTables())
+        parent = new AppUser
         {
-            if (!db.Users.Any(u => u.Role == "Parent"))
-            {
-                var p1 = new AppUser
-                {
-                    Id = Guid.NewGuid().ToString(),
-                    Username = "parent1",
-                    Role = "Parent"
-                };
-                p1.PasswordHash = hasher.HashPassword(p1, "ChangeMe123!");
-
-                var p2 = new AppUser
-                {
-                    Id = Guid.NewGuid().ToString(),
-                    Username = "parent2",
-                    Role = "Parent"
-                };
-                p2.PasswordHash = hasher.HashPassword(p2, "ChangeMe123!");
-
-                db.Users.AddRange(p1, p2);
-                db.SaveChanges();
-            }
-        }
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"User seed skipped: {ex.Message}");
+            Id = Guid.NewGuid().ToString(),
+            Username = "parent1",
+            Role = "Parent"
+        };
+        parent.PasswordHash = hasher.HashPassword(parent, "ChangeMe123!");
+        db.Users.Add(parent);
+        db.SaveChanges();
     }
 
-    var firstParentId = db.Users.Where(u => u.Role == "Parent").Select(u => u.Id).FirstOrDefault();
-    if (string.IsNullOrWhiteSpace(firstParentId))
-    {
-        Console.WriteLine("No parent users found; skipping kid seed.");
-    }
-    else if (!db.Kids.Any())
+    var parentId = parent.Id;
+
+    // Ensure default kids exist for that parent
+    var hasKidsForParent = db.Kids.Any(k => k.ParentId == parentId);
+    if (!hasKidsForParent)
     {
         db.Kids.AddRange(
-            new KidProfile { Id = "kid-1", ParentId = firstParentId, DisplayName = "Kid 1" },
-            new KidProfile { Id = "kid-2", ParentId = firstParentId, DisplayName = "Kid 2" }
+            new KidProfile { Id = "kid-1", ParentId = parentId, DisplayName = "Kid 1" },
+            new KidProfile { Id = "kid-2", ParentId = parentId, DisplayName = "Kid 2" }
         );
         db.SaveChanges();
     }
 }
+// -------------------------------------------------------------------------------
+
 
 // Health
 api.MapGet("/health", () => Results.Ok(new { status = "ok" }))
-   .RequireCors("Frontend")
    .AllowAnonymous();
 
 // -------------------- Auth (Option B) --------------------
+
+// Parent login: returns Parent token
 api.MapPost("/parent/login", async (AppDbContext db, IPasswordHasher<AppUser> hasher, ParentLoginRequest req) =>
 {
     var user = await db.Users.FirstOrDefaultAsync(u => u.Username == req.Username && u.Role == "Parent");
@@ -204,9 +179,9 @@ api.MapPost("/parent/login", async (AppDbContext db, IPasswordHasher<AppUser> ha
     var token = CreateToken(subjectId: user.Id, role: "Parent");
     return Results.Ok(new { token, role = "Parent" });
 })
-.RequireCors("Frontend")
 .AllowAnonymous();
 
+// Parent enters Kid Mode: returns Kid token scoped to a kid profile
 api.MapPost("/kid-session", async (ClaimsPrincipal principal, AppDbContext db, KidSessionRequest req) =>
 {
     var parentId = GetUserId(principal);
@@ -221,6 +196,8 @@ api.MapPost("/kid-session", async (ClaimsPrincipal principal, AppDbContext db, K
 .RequireAuthorization("ParentOnly");
 
 // -------------------- Kids --------------------
+
+// Parent sees only their kids
 api.MapGet("/kids", async (ClaimsPrincipal principal, AppDbContext db) =>
 {
     var parentId = GetUserId(principal);
@@ -231,6 +208,7 @@ api.MapGet("/kids", async (ClaimsPrincipal principal, AppDbContext db) =>
 })
 .RequireAuthorization("ParentOnly");
 
+// Parent adds a kid
 api.MapPost("/kids", async (ClaimsPrincipal principal, AppDbContext db, CreateKidRequest req) =>
 {
     var parentId = GetUserId(principal);
@@ -253,6 +231,7 @@ api.MapPost("/kids", async (ClaimsPrincipal principal, AppDbContext db, CreateKi
 })
 .RequireAuthorization("ParentOnly");
 
+// Parent renames a kid
 api.MapPut("/kids/{kidId}", async (ClaimsPrincipal principal, AppDbContext db, string kidId, UpdateKidRequest req) =>
 {
     var parentId = GetUserId(principal);
@@ -272,6 +251,8 @@ api.MapPut("/kids/{kidId}", async (ClaimsPrincipal principal, AppDbContext db, s
 .RequireAuthorization("ParentOnly");
 
 // -------------------- Tasks --------------------
+
+// Parent can view tasks (optional kidId filter); Kid can view only their tasks
 api.MapGet("/tasks", async (ClaimsPrincipal principal, AppDbContext db, string? kidId) =>
 {
     var role = principal.FindFirstValue(ClaimTypes.Role);
@@ -305,6 +286,7 @@ api.MapGet("/tasks", async (ClaimsPrincipal principal, AppDbContext db, string? 
 })
 .RequireAuthorization();
 
+// Parent creates tasks
 api.MapPost("/tasks", async (ClaimsPrincipal principal, AppDbContext db, CreateTaskRequest req) =>
 {
     var parentId = GetUserId(principal);
@@ -330,6 +312,7 @@ api.MapPost("/tasks", async (ClaimsPrincipal principal, AppDbContext db, CreateT
 })
 .RequireAuthorization("ParentOnly");
 
+// Kid completes tasks
 api.MapPut("/tasks/{id:int}/complete", async (ClaimsPrincipal principal, AppDbContext db, int id) =>
 {
     var kidId = principal.FindFirstValue("kidId") ?? GetUserId(principal);
@@ -348,6 +331,7 @@ api.MapPut("/tasks/{id:int}/complete", async (ClaimsPrincipal principal, AppDbCo
 })
 .RequireAuthorization("KidOnly");
 
+// Parent deletes tasks they created
 api.MapDelete("/tasks/{id:int}", async (ClaimsPrincipal principal, AppDbContext db, int id) =>
 {
     var parentId = GetUserId(principal);
@@ -364,6 +348,7 @@ api.MapDelete("/tasks/{id:int}", async (ClaimsPrincipal principal, AppDbContext 
 .RequireAuthorization("ParentOnly");
 
 // -------------------- Points --------------------
+
 api.MapGet("/points", async (ClaimsPrincipal principal, AppDbContext db, string? kidId) =>
 {
     var role = principal.FindFirstValue(ClaimTypes.Role);
@@ -400,11 +385,14 @@ api.MapGet("/points", async (ClaimsPrincipal principal, AppDbContext db, string?
 .RequireAuthorization();
 
 // -------------------- Rewards + Redemptions --------------------
+
+// Everyone can view rewards
 api.MapGet("/rewards", async (AppDbContext db) =>
     Results.Ok(await db.Rewards.ToListAsync())
 )
 .RequireAuthorization();
 
+// Parent creates rewards
 api.MapPost("/rewards", async (AppDbContext db, CreateRewardRequest req) =>
 {
     var reward = new Reward { Name = req.Name, Cost = req.Cost };
@@ -415,6 +403,7 @@ api.MapPost("/rewards", async (AppDbContext db, CreateRewardRequest req) =>
 })
 .RequireAuthorization("ParentOnly");
 
+// Kid redeems a reward
 api.MapPost("/rewards/{rewardId:int}/redeem", async (ClaimsPrincipal principal, AppDbContext db, int rewardId) =>
 {
     var kidId = principal.FindFirstValue("kidId") ?? GetUserId(principal);
@@ -450,6 +439,7 @@ api.MapPost("/rewards/{rewardId:int}/redeem", async (ClaimsPrincipal principal, 
 .RequireAuthorization("KidOnly");
 
 // -------------------- Todos --------------------
+
 api.MapGet("/todos", async (AppDbContext db) =>
     Results.Ok(await db.Todos.OrderBy(t => t.Id).ToListAsync())
 )
