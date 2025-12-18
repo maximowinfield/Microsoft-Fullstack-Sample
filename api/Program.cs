@@ -26,9 +26,10 @@ builder.Services.AddCors(options =>
     );
 });
 
-// EF Core + SQLite
+// ✅ EF Core + SQLite (Render persistent disk via DB_PATH)
+var dbPath = Environment.GetEnvironmentVariable("DB_PATH") ?? "app.db";
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlite("Data Source=app.db"));
+    options.UseSqlite($"Data Source={dbPath}"));
 
 // Password hashing (lightweight, no full Identity stack)
 builder.Services.AddScoped<IPasswordHasher<AppUser>, PasswordHasher<AppUser>>();
@@ -147,7 +148,7 @@ using (var scope = app.Services.CreateScope())
 
     var parentId = parent.Id;
 
-    // Ensure default kids exist for that parent
+    // Ensure default kids exist for that parent (kid-1 / kid-2)
     var hasKidsForParent = db.Kids.Any(k => k.ParentId == parentId);
     if (!hasKidsForParent)
     {
@@ -157,7 +158,8 @@ using (var scope = app.Services.CreateScope())
         );
         db.SaveChanges();
     }
-    // ✅ Seed default rewards if none exist
+
+    // Seed default rewards if none exist
     if (!db.Rewards.Any())
     {
         db.Rewards.AddRange(
@@ -168,8 +170,7 @@ using (var scope = app.Services.CreateScope())
         db.SaveChanges();
     }
 
-    // ✅ Seed default tasks if none exist
-    // (Only seed tasks if the database has zero tasks total, to avoid duplicating)
+    // Seed default tasks if none exist (avoid duplicating on every deploy)
     if (!db.Tasks.Any())
     {
         db.Tasks.AddRange(
@@ -203,10 +204,6 @@ using (var scope = app.Services.CreateScope())
         );
         db.SaveChanges();
     }
-
-
-
-
 }
 // -------------------------------------------------------------------------------
 
