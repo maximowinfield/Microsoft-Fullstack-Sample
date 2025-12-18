@@ -17,9 +17,18 @@ import {
 
 import { useAuth } from "../context/AuthContext";
 
+
 export default function KidsRewardsPage() {
-  const { auth } = useAuth();
+  const { auth, setAuth } = useAuth();
   const { kidId } = useParams<{ kidId: string }>();
+
+  // ✅ Force Parent mode when visiting parent pages
+  useEffect(() => {
+    if (auth?.parentToken && auth?.activeRole !== "Parent") {
+      setAuth((prev: any) => ({ ...prev, activeRole: "Parent" }));
+    }
+  }, [auth?.parentToken]);
+
 
   const [tasks, setTasks] = useState<KidTask[]>([]);
   const [points, setPoints] = useState<number>(0);
@@ -341,7 +350,7 @@ async function onDeleteReward(id: number) {
   </div>
 
   {/* Right side actions */}
-  {auth?.activeRole === "Parent" ? (
+{!!auth?.parentToken ? (
     editingTaskId === t.id ? (
       <div style={{ display: "flex", gap: 8 }}>
         <button onClick={() => onSaveTask(t.id)} style={{ padding: "6px 10px", borderRadius: 8 }}>
@@ -417,7 +426,7 @@ async function onDeleteReward(id: number) {
     )}
   </div>
 
-  {auth?.activeRole === "Parent" ? (
+  {!!auth?.parentToken ? (
     editingRewardId === r.id ? (
       <div style={{ display: "flex", gap: 8 }}>
         <button onClick={() => onSaveReward(r.id)} style={{ padding: "6px 10px", borderRadius: 8 }}>
@@ -454,7 +463,7 @@ async function onDeleteReward(id: number) {
       </div>
 
       {/* Parent admin (only show if Parent is active) */}
-      {auth?.activeRole === "Parent" && (
+      {!!auth?.parentToken && (
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
           <div style={{ border: "1px solid #eee", borderRadius: 12, padding: 14 }}>
             <h3 style={{ marginTop: 0 }}>Parent: Create Task</h3>

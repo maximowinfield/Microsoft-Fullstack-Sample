@@ -13,16 +13,19 @@ export default function RequireRole({
   children: JSX.Element;
 }) {
   const { auth } = useAuth();
+
   const allowed: Role[] = allow ?? (role ? [role] : ["Parent", "Kid"]);
+  const activeRole = auth?.activeRole;
 
-  const hasParent = !!auth?.parentToken;
-  const hasKid = !!auth?.kidToken;
+  // No active role = not authenticated
+  if (!activeRole) {
+    return <Navigate to="/login" replace />;
+  }
 
-  // If route allows Parent and we have parentToken -> OK
-  if (allowed.includes("Parent") && hasParent) return children;
+  // Active role must be explicitly allowed
+  if (!allowed.includes(activeRole)) {
+    return <Navigate to="/login" replace />;
+  }
 
-  // If route allows Kid and we have kidToken -> OK
-  if (allowed.includes("Kid") && hasKid) return children;
-
-  return <Navigate to="/login" replace />;
+  return children;
 }
