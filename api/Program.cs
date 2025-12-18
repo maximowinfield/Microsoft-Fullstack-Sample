@@ -52,7 +52,13 @@ builder.Services
             ValidateIssuerSigningKey = true,
             IssuerSigningKey = jwtKey,
             ValidateLifetime = true,
-            ClockSkew = TimeSpan.FromMinutes(1)
+            ClockSkew = TimeSpan.FromMinutes(1),
+
+            // Role policy reads ClaimTypes.Role
+            RoleClaimType = ClaimTypes.Role,
+
+            // NameIdentifier mapping can vary; we'll set it explicitly
+            NameClaimType = ClaimTypes.NameIdentifier
         };
     });
 
@@ -64,7 +70,6 @@ builder.Services.AddAuthorization(options =>
 
 var app = builder.Build();
 app.MapGet("/__version", () => Results.Text("CORS-GROUP-V1")).AllowAnonymous();
-
 
 // Routing + Middleware order matters
 app.UseRouting();
@@ -83,13 +88,25 @@ var api = app.MapGroup("/api")
 api.MapMethods("/{*path}", new[] { "OPTIONS" }, () => Results.Ok())
    .AllowAnonymous();
 
+// Helper: reliably read the authenticated user id (Parent or Kid)
+static string? GetUserId(ClaimsPrincipal principal)
+{
+    return principal.FindFirstValue(ClaimTypes.NameIdentifier)
+        ?? principal.FindFirstValue(JwtRegisteredClaimNames.Sub);
+}
 
 // Helper: create JWT tokens
 string CreateToken(string subjectId, string role, string? kidId = null, string? parentId = null)
 {
     var claims = new List<Claim>
     {
+        // Keep standard JWT subject claim
         new Claim(JwtRegisteredClaimNames.Sub, subjectId),
+
+        // ALSO include NameIdentifier so ASP.NET can consistently read it
+        new Claim(ClaimTypes.NameIdentifier, subjectId),
+
+        // Role-based policies rely on this
         new Claim(ClaimTypes.Role, role),
     };
 
@@ -172,7 +189,6 @@ api.MapGet("/health", () => Results.Ok(new { status = "ok" }))
    .RequireCors("Frontend")
    .AllowAnonymous();
 
-
 // -------------------- Auth (Option B) --------------------
 
 // Parent login: returns Parent token
@@ -190,11 +206,10 @@ api.MapPost("/parent/login", async (AppDbContext db, IPasswordHasher<AppUser> ha
 .RequireCors("Frontend")
 .AllowAnonymous();
 
-
 // Parent enters Kid Mode: returns Kid token scoped to a kid profile
 api.MapPost("/kid-session", async (ClaimsPrincipal principal, AppDbContext db, KidSessionRequest req) =>
 {
-    var parentId = principal.FindFirstValue(JwtRegisteredClaimNames.Sub);
+    var parentId = GetUserId(principal);
     if (string.IsNullOrWhiteSpace(parentId)) return Results.Unauthorized();
 
     var kid = await db.Kids.FirstOrDefaultAsync(k => k.Id == req.KidId && k.ParentId == parentId);
@@ -210,7 +225,7 @@ api.MapPost("/kid-session", async (ClaimsPrincipal principal, AppDbContext db, K
 // Parent sees only their kids
 api.MapGet("/kids", async (ClaimsPrincipal principal, AppDbContext db) =>
 {
-    var parentId = principal.FindFirstValue(JwtRegisteredClaimNames.Sub);
+    var parentId = GetUserId(principal);
     if (string.IsNullOrWhiteSpace(parentId)) return Results.Unauthorized();
 
     var kids = await db.Kids.Where(k => k.ParentId == parentId).ToListAsync();
@@ -228,14 +243,14 @@ api.MapGet("/tasks", async (ClaimsPrincipal principal, AppDbContext db, string? 
 
     if (role == "Kid")
     {
-        var kidClaim = principal.FindFirstValue("kidId") ?? principal.FindFirstValue(JwtRegisteredClaimNames.Sub);
+        var kidClaim = principal.FindFirstValue("kidId") ?? GetUserId(principal);
         if (string.IsNullOrWhiteSpace(kidClaim)) return Results.Unauthorized();
 
         var tasks = await db.Tasks.Where(t => t.AssignedKidId == kidClaim).ToListAsync();
         return Results.Ok(tasks);
     }
 
-    var parentId = principal.FindFirstValue(JwtRegisteredClaimNames.Sub);
+    var parentId = GetUserId(principal);
     if (string.IsNullOrWhiteSpace(parentId)) return Results.Unauthorized();
 
     var q = db.Tasks.AsQueryable();
@@ -258,7 +273,7 @@ api.MapGet("/tasks", async (ClaimsPrincipal principal, AppDbContext db, string? 
 // Parent creates tasks; server sets CreatedByParentId
 api.MapPost("/tasks", async (ClaimsPrincipal principal, AppDbContext db, CreateTaskRequest req) =>
 {
-    var parentId = principal.FindFirstValue(JwtRegisteredClaimNames.Sub);
+    var parentId = GetUserId(principal);
     if (string.IsNullOrWhiteSpace(parentId)) return Results.Unauthorized();
 
     var kidExists = await db.Kids.AnyAsync(k => k.Id == req.AssignedKidId && k.ParentId == parentId);
@@ -284,7 +299,7 @@ api.MapPost("/tasks", async (ClaimsPrincipal principal, AppDbContext db, CreateT
 // Kid completes tasks
 api.MapPut("/tasks/{id:int}/complete", async (ClaimsPrincipal principal, AppDbContext db, int id) =>
 {
-    var kidId = principal.FindFirstValue("kidId") ?? principal.FindFirstValue(JwtRegisteredClaimNames.Sub);
+    var kidId = principal.FindFirstValue("kidId") ?? GetUserId(principal);
     if (string.IsNullOrWhiteSpace(kidId)) return Results.Unauthorized();
 
     var task = await db.Tasks.FirstOrDefaultAsync(t => t.Id == id && t.AssignedKidId == kidId);
@@ -303,7 +318,7 @@ api.MapPut("/tasks/{id:int}/complete", async (ClaimsPrincipal principal, AppDbCo
 // Parent deletes tasks they created
 api.MapDelete("/tasks/{id:int}", async (ClaimsPrincipal principal, AppDbContext db, int id) =>
 {
-    var parentId = principal.FindFirstValue(JwtRegisteredClaimNames.Sub);
+    var parentId = GetUserId(principal);
     if (string.IsNullOrWhiteSpace(parentId)) return Results.Unauthorized();
 
     var task = await db.Tasks.FirstOrDefaultAsync(t => t.Id == id && t.CreatedByParentId == parentId);
@@ -325,12 +340,12 @@ api.MapGet("/points", async (ClaimsPrincipal principal, AppDbContext db, string?
     string effectiveKidId;
     if (role == "Kid")
     {
-        effectiveKidId = principal.FindFirstValue("kidId") ?? principal.FindFirstValue(JwtRegisteredClaimNames.Sub) ?? "";
+        effectiveKidId = principal.FindFirstValue("kidId") ?? GetUserId(principal) ?? "";
         if (string.IsNullOrWhiteSpace(effectiveKidId)) return Results.Unauthorized();
     }
     else
     {
-        var parentId = principal.FindFirstValue(JwtRegisteredClaimNames.Sub);
+        var parentId = GetUserId(principal);
         if (string.IsNullOrWhiteSpace(parentId)) return Results.Unauthorized();
 
         if (string.IsNullOrWhiteSpace(kidId)) return Results.BadRequest("kidId is required for parent.");
@@ -375,7 +390,7 @@ api.MapPost("/rewards", async (AppDbContext db, CreateRewardRequest req) =>
 // Kid redeems a reward
 api.MapPost("/rewards/{rewardId:int}/redeem", async (ClaimsPrincipal principal, AppDbContext db, int rewardId) =>
 {
-    var kidId = principal.FindFirstValue("kidId") ?? principal.FindFirstValue(JwtRegisteredClaimNames.Sub);
+    var kidId = principal.FindFirstValue("kidId") ?? GetUserId(principal);
     if (string.IsNullOrWhiteSpace(kidId)) return Results.Unauthorized();
 
     var reward = await db.Rewards.FirstOrDefaultAsync(r => r.Id == rewardId);
