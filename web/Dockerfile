@@ -1,18 +1,55 @@
-# Build the Vite React+TS app and serve the static site
-FROM node:18-alpine AS build
-WORKDIR /app
-COPY package.json package-lock.json* ./
-RUN npm install
-COPY . .
-ARG VITE_API_URL
+# ---------- 1) Build React (Vite) ----------
+FROM node:18-alpine AS web-build
+WORKDIR /src/web
+
+# install deps
+COPY web/package.json web/package-lock.json* ./
+RUN npm ci
+
+# copy web source and build
+COPY web/ ./
+
+# Build-time env for Vite
+# Render (API serves UI): VITE_API_URL=/api and VITE_BASE=/
+ARG VITE_API_URL=/api
+ARG VITE_BASE=/
 ENV VITE_API_URL=${VITE_API_URL}
-# Ensure Vite picks up the env var at build time
-RUN echo "VITE_API_URL=${VITE_API_URL}" > .env.production
+ENV VITE_BASE=${VITE_BASE}
+
+# Vite reads env vars at build time
+RUN echo "VITE_API_URL=${VITE_API_URL}" > .env.production \
+    && echo "VITE_BASE=${VITE_BASE}" >> .env.production
+
 RUN npm run build
 
-FROM node:18-alpine AS prod
+
+
+
+# ---------- 2) Build & publish .NET API ----------
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS api-build
+WORKDIR /src
+
+# copy API csproj first for better caching
+COPY api/*.csproj ./api/
+RUN dotnet restore ./api
+
+# copy the rest of the API source
+COPY api/ ./api/
+
+# copy built React dist into api/wwwroot
+COPY --from=web-build /src/web/dist ./api/wwwroot/
+
+# publish
+RUN dotnet publish ./api -c Release -o /app/publish
+
+
+# ---------- 3) Runtime image ----------
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
 WORKDIR /app
-RUN npm i -g serve
-COPY --from=build /app/dist ./dist
-EXPOSE 5173
-CMD ["serve", "-s", "dist", "-l", "5173"]
+COPY --from=api-build /app/publish ./
+
+# Render sets PORT; ASP.NET must listen on it
+ENV ASPNETCORE_URLS=http://0.0.0.0:${PORT}
+EXPOSE 10000
+
+CMD ["dotnet", "api.dll"]
