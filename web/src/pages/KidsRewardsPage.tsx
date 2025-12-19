@@ -259,7 +259,7 @@ async function onDeleteReward(id: number) {
         fontFamily: "system-ui",
       }}
     >
-      <h1 style={{ marginBottom: 8 }}>Kids Task List + Rewards</h1>
+      <h1 style={{ marginBottom: 8 }}>Kids Task List + Rewards (EDIT-UI-V3)</h1>
       <p style={{ marginTop: 0 }}>
         Kids complete tasks to earn points. Parents add tasks and rewards.
       </p>
