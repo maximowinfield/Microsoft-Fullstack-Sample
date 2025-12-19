@@ -54,3 +54,8 @@ ENV ASPNETCORE_URLS=http://0.0.0.0:${PORT}
 EXPOSE 10000
 
 CMD ["dotnet", "api.dll"]
+
+EXPOSE 8080
+ENV ASPNETCORE_URLS=http://0.0.0.0:8080
+
+ENTRYPOINT ["dotnet", "MsFullstackSample.Api.dll"]
