@@ -9,6 +9,21 @@ export default function App() {
   const { auth, setAuth } = useAuth();
   const location = useLocation();
 
+  // isDark and bar styling pills
+  const isDark =
+  typeof window !== "undefined" &&
+  window.matchMedia &&
+  window.matchMedia("(prefers-color-scheme: dark)").matches;
+
+const theme = {
+  bg: isDark ? "#0b0f19" : "#ffffff",
+  text: isDark ? "#e5e7eb" : "#0f172a",
+  border: isDark ? "rgba(148,163,184,0.25)" : "rgba(15,23,42,0.15)",
+  pillBg: isDark ? "rgba(148,163,184,0.08)" : "rgba(15,23,42,0.04)",
+  pillActiveBg: isDark ? "rgba(99,102,241,0.25)" : "rgba(99,102,241,0.15)",
+};
+
+
   // ✅ Auth = only Parent login exists now
   const isAuthed = !!auth?.parentToken;
 
@@ -25,18 +40,32 @@ export default function App() {
   const appText = isParentMode ? "#e5e7eb" : "#0f172a";
 
   // Nav pills declarations
-  const navPill: React.CSSProperties = {
-    padding: "8px 14px",
-    borderRadius: 999,
-    textDecoration: "none",
-    fontWeight: 700,
-    border: "1px solid rgba(148,163,184,0.3)",
-    color: appText,
-  };
+const navPill: React.CSSProperties = {
+  padding: "10px 14px",
+  borderRadius: 999,
+  textDecoration: "none",
+  fontWeight: 800,
+  border: `1px solid ${theme.border}`,
+  background: theme.pillBg,
+  color: theme.text,
+};
 
-  const navPillActive: React.CSSProperties = {
-    background: "rgba(99,102,241,0.15)",
-  };
+const navPillActive: React.CSSProperties = {
+  background: theme.pillActiveBg,
+};
+
+// shared button style
+const topBtn: React.CSSProperties = {
+  padding: "8px 12px",
+  borderRadius: 10,
+  border: `1px solid ${theme.border}`,
+  background: theme.pillBg,
+  color: theme.text,
+  cursor: "pointer",
+  fontWeight: 800,
+};
+
+
 
   function clearAuth() {
     setAuth({
@@ -72,16 +101,21 @@ export default function App() {
   return (
     <div style={{ minHeight: "100vh", fontFamily: "system-ui" }}>
       {/* Top bar */}
-      <div
-        style={{
-          maxWidth: 860,
-          margin: "20px auto 0",
-          padding: "0 16px",
-          display: "flex",
-          gap: 12,
-          alignItems: "center",
-        }}
-      >
+<div
+  style={{
+    maxWidth: 980,
+    margin: "16px auto 0",
+    padding: "12px 16px",
+    display: "flex",
+    gap: 12,
+    alignItems: "center",
+    borderRadius: 16,
+    background: theme.bg,
+    border: `1px solid ${theme.border}`,
+    color: theme.text,
+  }}
+>
+
         {/* Left side: nav pills (ONLY when logged in) */}
         {isAuthed && (
           <>
@@ -110,30 +144,18 @@ export default function App() {
         {/* Right side: login OR mode buttons */}
         <div style={{ marginLeft: "auto", display: "flex", gap: 8, alignItems: "center" }}>
           {!isAuthed ? (
-            <Link to="/login" style={{ textDecoration: "none" }}>
-              <button style={{ cursor: "pointer" }}>Login</button>
-            </Link>
+<Link to="/login" style={{ textDecoration: "none" }}>
+  <button style={topBtn}>Login</button>
+</Link>
           ) : (
             <>
-              <button
-                onClick={switchToKidMode}
-                style={{
-                  cursor: "pointer",
-                  opacity: isKidMode ? 0.7 : 1,
-                }}
-              >
-                Kid Mode
-              </button>
+<button onClick={switchToKidMode} style={{ ...topBtn, opacity: isKidMode ? 0.7 : 1 }}>
+  Kid Mode
+</button>
 
-              <button
-                onClick={switchToParentMode}
-                style={{
-                  cursor: "pointer",
-                  opacity: isParentMode ? 0.7 : 1,
-                }}
-              >
-                Parent Mode
-              </button>
+<button onClick={switchToParentMode} style={{ ...topBtn, opacity: isParentMode ? 0.7 : 1 }}>
+  Parent Mode
+</button>
 
               <button onClick={clearAuth} style={{ cursor: "pointer" }}>
                 Logout
