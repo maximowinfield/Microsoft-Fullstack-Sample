@@ -4,6 +4,8 @@ import TodosPage from "./pages/TodosPage";
 import Login from "./pages/Login";
 import RequireRole from "./components/RequireRole";
 import { useAuth } from "./context/AuthContext";
+import { useLocation } from "react-router-dom";
+
 
 export default function App() {
   const { auth, setAuth } = useAuth();
@@ -18,6 +20,33 @@ export default function App() {
 
   // Option A: kidId in the URL (saved selection)
   const parentKidId = auth?.selectedKidId;
+
+  // Declarations for background and text color
+  const appBg = isParentMode ? "#0b0f19" : "#f8fafc";
+  const appText = isParentMode ? "#e5e7eb" : "#0f172a";
+  //useLocation declaration
+  const location = useLocation();
+
+  // Simple link style
+  const linkStyle: React.CSSProperties = {
+  color: appText,
+  textDecoration: "none",
+  fontWeight: 700,
+  };
+
+  // Nav pills declarations
+  const navPill: React.CSSProperties = {
+  padding: "8px 14px",
+  borderRadius: 999,
+  textDecoration: "none",
+  fontWeight: 700,
+  border: "1px solid rgba(148,163,184,0.3)",
+};
+
+const navPillActive: React.CSSProperties = {
+  background: "rgba(99,102,241,0.15)",
+};
+
 
   function clearAuth() {
     setAuth({
@@ -52,8 +81,8 @@ function switchToKidMode() {
 }
 
 
-  return (
-    <div style={{ minHeight: "100vh", fontFamily: "system-ui", color: "#fff" }}>
+return (
+  <div style={{ minHeight: "100vh", fontFamily: "system-ui" }}>
       <div
         style={{
           maxWidth: 860,
@@ -64,15 +93,33 @@ function switchToKidMode() {
           alignItems: "center",
         }}
       >
-        {/* Only show app nav if logged in */}
-        {isAuthed && (
-          <>
-            <Link to={parentKidId ? `/parent/kids/${parentKidId}` : "/parent/kids"}>
-              Kids + Rewards
-            </Link>
-            <Link to="/parent/todos">Todos</Link>
-          </>
-        )}
+        {/*Kids Rewards Nav pill */}
+{isAuthed && (
+  <>
+<Link
+  to={parentKidId ? `/parent/kids/${parentKidId}` : "/parent/kids"}
+  style={{
+    ...navPill,
+    ...(location.pathname.startsWith("/parent/kids") ? navPillActive : {}),
+  }}
+>
+  Kids + Rewards
+</Link>
+
+
+<Link
+  to="/parent/todos"
+  style={{
+    ...navPill,
+    ...(location.pathname.startsWith("/parent/todos") ? navPillActive : {}),
+  }}
+>
+  Todos
+</Link>
+
+  </>
+)}
+
 
         {/* Always visible */}
         <Link to="/login">Login</Link>
