@@ -31,17 +31,26 @@ export default function App() {
     });
   }
 
-  function switchToParentMode() {
-    setAuth((prev) =>
-      prev.parentToken ? { ...prev, uiMode: "Parent" } : prev
-    );
-  }
+function switchToParentMode() {
+  if (!auth?.parentToken) return;
 
-  function switchToKidMode() {
-    setAuth((prev) =>
-      prev.parentToken ? { ...prev, uiMode: "Kid" } : prev
-    );
+  const expectedPin = import.meta.env.VITE_PARENT_PIN || "1234";
+  const entered = window.prompt("Enter Parent PIN:");
+
+  if (entered === expectedPin) {
+    setAuth((prev) => ({ ...prev, uiMode: "Parent" }));
+  } else {
+    alert("Wrong PIN. Staying in Kid Mode.");
+    setAuth((prev) => ({ ...prev, uiMode: "Kid" }));
   }
+}
+
+
+function switchToKidMode() {
+  if (!auth?.parentToken) return;
+  setAuth((prev) => ({ ...prev, uiMode: "Kid" }));
+}
+
 
   return (
     <div style={{ minHeight: "100vh", fontFamily: "system-ui", color: "#fff" }}>

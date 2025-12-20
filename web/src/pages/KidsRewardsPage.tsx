@@ -31,6 +31,9 @@ export default function KidsRewardsPage() {
   const navigate = useNavigate();
   const [kids, setKids] = useState<KidProfile[]>([]);
   const [selectedKidId, setSelectedKidId] = useState<string>(auth?.selectedKidId ?? "");
+  const isKidMode = auth?.uiMode === "Kid";
+  const isParentMode = auth?.uiMode === "Parent";
+
 
 
     // ✅ Simple light/dark palette (fixes invisible light-mode styling)
@@ -515,7 +518,7 @@ if (!effectiveKidId) {
     )}
 
     {/* Parent controls */}
-    {auth?.activeRole === "Parent" &&
+    {isParentMode &&
       (editingTaskId === t.id ? (
         <>
           <button
@@ -626,7 +629,7 @@ if (!effectiveKidId) {
     )}
   </div>
 
-  {auth?.activeRole === "Parent" ? (
+  {isParentMode ? (
     editingRewardId === r.id ? (
       <div style={{ display: "flex", gap: 8 }}>
         <button onClick={() => onSaveReward(r.id)} style={{ padding: "6px 10px", borderRadius: 8 }}>
@@ -663,7 +666,7 @@ if (!effectiveKidId) {
       </div>
 
       {/* Parent admin (only show if Parent is active) */}
-      {!!auth?.parentToken && (
+      {isParentMode && !!auth?.parentToken && (
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
           <div style={{ border: "1px solid #eee", borderRadius: 12, padding: 14 }}>
             <h3 style={{ marginTop: 0 }}>Parent: Create Task</h3>

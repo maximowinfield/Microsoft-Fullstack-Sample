@@ -23,17 +23,17 @@ export default function Login() {
     try {
       const data = await parentLogin({ username, password });
 
-      setAuth((prev: any) => ({
-        ...prev,
-        parentToken: data.token,
-        activeRole: "Parent",
+setAuth((prev: any) => ({
+  ...prev,
+  parentToken: data.token,
+  activeRole: "Parent",
+  uiMode: "Parent", // ✅ always start in Parent mode after login
 
-        // ✅ clear any kid selection/session state (UI mode only)
-        kidId: undefined,
-        kidName: undefined,
-        selectedKidId: undefined,
-        selectedKidName: undefined,
-      }));
+  // keep your selection fields if you want
+  selectedKidId: prev.selectedKidId,
+  selectedKidName: prev.selectedKidName,
+}));
+
 
       navigate("/parent/kids", { replace: true });
     } catch (err: any) {

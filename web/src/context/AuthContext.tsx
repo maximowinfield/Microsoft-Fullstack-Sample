@@ -36,7 +36,7 @@ function emptyAuth(): AuthState {
   return {
     parentToken: null,
     activeRole: null,
-    uiMode: "Kid", // default safe mode
+    uiMode: "Kid", // safe default when logged out
 
     kidId: undefined,
     kidName: undefined,
@@ -46,6 +46,7 @@ function emptyAuth(): AuthState {
 }
 
 
+
 function loadAuth(): AuthState {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -53,18 +54,15 @@ function loadAuth(): AuthState {
 
     const parsed = JSON.parse(raw) as Partial<AuthState>;
 
-    // Auth role: only Parent exists now
-    const activeRole: Role | null = parsed.parentToken ? "Parent" : null;
-
-    // UI mode: if missing, choose something sensible
-    const uiMode: UiMode =
-      (parsed.uiMode as UiMode) ??
-      (parsed.parentToken ? "Parent" : "Kid");
+    const parentToken = parsed.parentToken ?? null;
+    const activeRole: Role | null = parentToken ? "Parent" : null;
 
     return {
-      parentToken: parsed.parentToken ?? null,
+      parentToken,
       activeRole,
-      uiMode,
+
+      // if missing, default to safe mode
+      uiMode: parsed.uiMode ?? (parentToken ? "Parent" : "Kid"),
 
       kidId: parsed.kidId,
       kidName: parsed.kidName,
@@ -76,6 +74,7 @@ function loadAuth(): AuthState {
     return emptyAuth();
   }
 }
+
 
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
