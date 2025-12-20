@@ -31,6 +31,7 @@ async function login() {
   }
 }
 
+console.log("Demo enabled:", import.meta.env.VITE_DEMO_ENABLED);
 
   return (
     <div>
