@@ -1,11 +1,14 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { setApiToken } from "../api";
 
-type Role = "Parent" | "Kid";
+type Role = "Parent"; // authentication role (only parent login exists now)
+type UiMode = "Parent" | "Kid"; // UI mode toggle
 
 export interface AuthState {
   parentToken: string | null;
   activeRole: Role | null;
+
+  uiMode: UiMode; // ✅ NEW
 
   kidId?: string;
   kidName?: string;
@@ -13,6 +16,7 @@ export interface AuthState {
   selectedKidId?: string;
   selectedKidName?: string;
 }
+
 
 type AuthContextValue = {
   auth: AuthState;
@@ -32,12 +36,15 @@ function emptyAuth(): AuthState {
   return {
     parentToken: null,
     activeRole: null,
+    uiMode: "Kid", // default safe mode
+
     kidId: undefined,
     kidName: undefined,
     selectedKidId: undefined,
     selectedKidName: undefined,
   };
 }
+
 
 function loadAuth(): AuthState {
   try {
@@ -46,14 +53,19 @@ function loadAuth(): AuthState {
 
     const parsed = JSON.parse(raw) as Partial<AuthState>;
 
-    // ✅ If activeRole is missing in older saved data, default sensibly
-    const activeRole: Role | null =
-      (parsed.activeRole as Role | null) ??
-      (parsed.parentToken ? "Parent" : null);
+    // Auth role: only Parent exists now
+    const activeRole: Role | null = parsed.parentToken ? "Parent" : null;
+
+    // UI mode: if missing, choose something sensible
+    const uiMode: UiMode =
+      (parsed.uiMode as UiMode) ??
+      (parsed.parentToken ? "Parent" : "Kid");
 
     return {
       parentToken: parsed.parentToken ?? null,
       activeRole,
+      uiMode,
+
       kidId: parsed.kidId,
       kidName: parsed.kidName,
       selectedKidId: parsed.selectedKidId,
@@ -64,6 +76,7 @@ function loadAuth(): AuthState {
     return emptyAuth();
   }
 }
+
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   // ✅ Load auth AND immediately set axios token during initialization

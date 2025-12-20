@@ -8,32 +8,40 @@ import { useAuth } from "./context/AuthContext";
 export default function App() {
   const { auth, setAuth } = useAuth();
 
-  const isParent = !!auth?.parentToken;
-const isAuthed = !!auth.parentToken;
-const isKidMode = auth.activeRole === "Kid";
-const isParentMode = auth.activeRole === "Parent";
+  // ✅ Auth = only Parent login exists now
+  const isAuthed = !!auth?.parentToken;
+  const isParentRole = auth?.activeRole === "Parent";
 
+  // ✅ Kid vs Parent is now UI MODE (not auth role)
+  const isKidMode = auth?.uiMode === "Kid";
+  const isParentMode = auth?.uiMode === "Parent";
 
-  // Option A: kidId in the URL
+  // Option A: kidId in the URL (saved selection)
   const parentKidId = auth?.selectedKidId;
 
   function clearAuth() {
-  setAuth({
-    parentToken: null,
-    activeRole: null,
-    kidId: undefined,
-    kidName: undefined,
-    selectedKidId: undefined,
-    selectedKidName: undefined,
-  });
-}
+    setAuth({
+      parentToken: null,
+      activeRole: null,
+      uiMode: "Kid", // ✅ safe default when logged out
+      kidId: undefined,
+      kidName: undefined,
+      selectedKidId: undefined,
+      selectedKidName: undefined,
+    });
+  }
 
+  function switchToParentMode() {
+    setAuth((prev) =>
+      prev.parentToken ? { ...prev, uiMode: "Parent" } : prev
+    );
+  }
 
-function switchToParent() {
-  setAuth((prev) => (prev.parentToken ? { ...prev, activeRole: "Parent" } : prev));
-}
-
-
+  function switchToKidMode() {
+    setAuth((prev) =>
+      prev.parentToken ? { ...prev, uiMode: "Kid" } : prev
+    );
+  }
 
   return (
     <div style={{ minHeight: "100vh", fontFamily: "system-ui", color: "#fff" }}>
@@ -47,8 +55,8 @@ function switchToParent() {
           alignItems: "center",
         }}
       >
-        {/* Parent links */}
-        {isParent && (
+        {/* Only show app nav if logged in */}
+        {isAuthed && (
           <>
             <Link to={parentKidId ? `/parent/kids/${parentKidId}` : "/parent/kids"}>
               Kids + Rewards
@@ -57,26 +65,47 @@ function switchToParent() {
           </>
         )}
 
-
-        {/* Login always visible */}
+        {/* Always visible */}
         <Link to="/login">Login</Link>
 
-        {/* Optional quick role toggle */}
+        {/* Mode toggle + logout */}
         <div style={{ marginLeft: "auto", display: "flex", gap: 8 }}>
-          {isParent && (
-            <button onClick={switchToParent} style={{ cursor: "pointer" }}>
-              Parent Mode
-            </button>
+          {isAuthed && (
+            <>
+              <button
+                onClick={switchToKidMode}
+                style={{
+                  cursor: "pointer",
+                  opacity: isKidMode ? 0.7 : 1,
+                }}
+              >
+                Kid Mode
+              </button>
+
+              <button
+                onClick={switchToParentMode}
+                style={{
+                  cursor: "pointer",
+                  opacity: isParentMode ? 0.7 : 1,
+                }}
+              >
+                Parent Mode
+              </button>
+
+              <button onClick={clearAuth} style={{ cursor: "pointer" }}>
+                Logout
+              </button>
+            </>
           )}
         </div>
       </div>
 
       <Routes>
-        {/* Default: if parent logged in, go to parent home (kid-specific if selected) */}
+        {/* Default route */}
         <Route
           path="/"
           element={
-            isParent ? (
+            isAuthed ? (
               parentKidId ? (
                 <Navigate to={`/parent/kids/${parentKidId}`} replace />
               ) : (
@@ -90,18 +119,16 @@ function switchToParent() {
 
         <Route path="/login" element={<Login />} />
 
-<Route
-  path="/parent/kids"
-  element={
-    <RequireRole role="Parent">
-      <KidsRewardsPage />
-    </RequireRole>
-  }
-/>
+        {/* Parent-only pages (auth role check) */}
+        <Route
+          path="/parent/kids"
+          element={
+            <RequireRole role="Parent">
+              <KidsRewardsPage />
+            </RequireRole>
+          }
+        />
 
-
-
-        {/* ✅ Option A route (kidId in URL) */}
         <Route
           path="/parent/kids/:kidId"
           element={
@@ -119,7 +146,6 @@ function switchToParent() {
             </RequireRole>
           }
         />
-
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
