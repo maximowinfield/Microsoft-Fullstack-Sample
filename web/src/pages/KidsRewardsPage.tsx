@@ -387,36 +387,33 @@ if (!effectiveKidId) {
 
 
 
-  return (
-    <div
-      style={{
-        maxWidth: 860,
-        margin: "40px auto",
-        padding: 16,
-        fontFamily: "system-ui",
-      }}
-    >
-      <h1 style={{ marginBottom: 8 }}>Kids Task List + Rewards (EDIT-UI-V3)</h1>
-      <p style={{ marginTop: 0 }}>
-        Kids complete tasks to earn points. Parents add tasks and rewards.
-      </p>
-
+return (
+  <div
+    style={{
+      minHeight: "calc(100vh - 80px)",
+      background: ui.bg,
+      color: ui.text,
+      padding: "24px 16px",
+    }}
+  >
+    <div style={{ maxWidth: 980, margin: "0 auto", fontFamily: "system-ui" }}>
+      {/* Error banner */}
       {error && (
         <div
           style={{
-            border: "1px solid #ffb3b3",
-            background: "#2a0f0f",
+            border: `1px solid ${ui.dangerText}`,
+            background: ui.dangerBg,
             padding: 12,
-            borderRadius: 10,
+            borderRadius: 12,
             marginBottom: 16,
           }}
         >
-          <strong style={{ color: "#ff6b6b" }}>Error</strong>
+          <strong style={{ color: ui.dangerText }}>Error</strong>
           <pre
             style={{
               margin: "8px 0 0",
               whiteSpace: "pre-wrap",
-              color: "#ffb3b3",
+              color: ui.dangerText,
             }}
           >
             {error}
@@ -424,289 +421,470 @@ if (!effectiveKidId) {
         </div>
       )}
 
-      {/* ✅ Header row */}
-      <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 18 }}>
-        <div>
-          <strong>Viewing Kid ID:</strong> {effectiveKidId}{" "}
-          <span style={{ opacity: 0.7 }}>({auth?.activeRole ?? "Unknown"})</span>
+      {/* Header row */}
+      <div
+        style={{
+          display: "flex",
+          gap: 12,
+          alignItems: "center",
+          marginBottom: 18,
+          padding: 14,
+          borderRadius: 14,
+          border: `1px solid ${ui.border}`,
+          background: ui.card,
+        }}
+      >
+        <div style={{ display: "grid", gap: 4 }}>
+          <div style={{ fontSize: 20, fontWeight: 800 }}>Kids + Rewards</div>
+          <div style={{ color: ui.subtleText, fontSize: 13 }}>
+            Viewing Kid ID: <strong style={{ color: ui.text }}>{effectiveKidId}</strong>{" "}
+            • Mode: <strong style={{ color: ui.text }}>{auth?.uiMode ?? "Kid"}</strong>
+          </div>
         </div>
 
         <div style={{ marginLeft: "auto", display: "flex", gap: 12, alignItems: "center" }}>
-          <div style={{ padding: "8px 12px", border: "1px solid #eee", borderRadius: 10 }}>
-            <strong>Points:</strong> {points}
+          <div
+            style={{
+              padding: "8px 12px",
+              border: `1px solid ${ui.border}`,
+              borderRadius: 12,
+              background: ui.buttonBg,
+              color: ui.buttonText,
+              fontWeight: 700,
+            }}
+          >
+            Points: {points}
           </div>
 
-<button
-  onClick={() => navigate("/parent/kids", { replace: true })}
-  style={{
-    border: `1px solid ${ui.border}`,
-    background: ui.buttonBg,
-    color: ui.buttonText,
-    borderRadius: 10,
-    padding: "6px 10px",
-    cursor: "pointer",
-  }}
->
-  Change Kid
-</button>
-
+          <button
+            onClick={() => navigate("/parent/kids", { replace: true })}
+            style={{
+              border: `1px solid ${ui.border}`,
+              background: ui.buttonBg,
+              color: ui.buttonText,
+              borderRadius: 12,
+              padding: "8px 12px",
+              cursor: "pointer",
+              fontWeight: 700,
+            }}
+          >
+            Change Kid
+          </button>
         </div>
       </div>
 
-      {/* Tasks */}
-      <div style={{ border: "1px solid #eee", borderRadius: 12, padding: 14, marginBottom: 18 }}>
-        <h2 style={{ marginTop: 0 }}>Tasks</h2>
+      {/* Tasks card */}
+      <div
+        style={{
+          border: `1px solid ${ui.border}`,
+          borderRadius: 14,
+          padding: 16,
+          marginBottom: 18,
+          background: ui.card,
+        }}
+      >
+        <h2 style={{ marginTop: 0, marginBottom: 10 }}>Tasks</h2>
 
         {tasks.length === 0 ? (
-          <p>No tasks yet for this kid.</p>
+          <p style={{ color: ui.subtleText }}>No tasks yet for this kid.</p>
         ) : (
           <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
             {tasks.map((t) => (
-<li
-  key={t.id}
-  style={{
-    display: "flex",
-    alignItems: "center",
-    gap: 10,
-    padding: 10,
-    borderBottom: "1px solid #f1f1f1",
-  }}
->
-  {/* Left side */}
-  <div style={{ flex: 1 }}>
-    {editingTaskId === t.id ? (
-      <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-        <input
-          value={editTaskTitle}
-          onChange={(e) => setEditTaskTitle(e.target.value)}
-          style={{ padding: 6, borderRadius: 8, border: "1px solid #ccc", flex: 1 }}
-        />
-        <input
-          type="number"
-          value={editTaskPoints}
-          onChange={(e) => setEditTaskPoints(Number(e.target.value))}
-          min={0}
-          style={{ padding: 6, borderRadius: 8, border: "1px solid #ccc", width: 90 }}
-        />
-      </div>
-    ) : (
-      <span style={{ textDecoration: t.isComplete ? "line-through" : "none" }}>
-        {t.title} <span style={{ opacity: 0.7 }}>({t.points} pts)</span>
-      </span>
-    )}
-  </div>
+              <li
+                key={t.id}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 10,
+                  padding: 12,
+                  borderBottom: `1px solid ${ui.border}`,
+                }}
+              >
+                <div style={{ flex: 1 }}>
+                  {editingTaskId === t.id ? (
+                    <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                      <input
+                        value={editTaskTitle}
+                        onChange={(e) => setEditTaskTitle(e.target.value)}
+                        style={{
+                          padding: 10,
+                          borderRadius: 10,
+                          border: `1px solid ${ui.border}`,
+                          background: ui.bg,
+                          color: ui.text,
+                          flex: 1,
+                        }}
+                      />
+                      <input
+                        type="number"
+                        value={editTaskPoints}
+                        onChange={(e) => setEditTaskPoints(Number(e.target.value))}
+                        min={0}
+                        style={{
+                          padding: 10,
+                          borderRadius: 10,
+                          border: `1px solid ${ui.border}`,
+                          background: ui.bg,
+                          color: ui.text,
+                          width: 110,
+                        }}
+                      />
+                    </div>
+                  ) : (
+                    <span style={{ textDecoration: t.isComplete ? "line-through" : "none" }}>
+                      {t.title}{" "}
+                      <span style={{ color: ui.subtleText }}>({t.points} pts)</span>
+                    </span>
+                  )}
+                </div>
 
-  {/* Right side actions */}
-  <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-    {/* Complete button (show for anyone if not complete) */}
-    {t.isComplete ? (
-      <span style={{ fontSize: 12, opacity: 0.7 }}>Completed</span>
-    ) : (
-      <button
-        onClick={() => onCompleteTask(t.id)}
-        style={{
-          padding: "6px 10px",
-          borderRadius: 8,
-          border: `1px solid ${ui.border}`,
-          background: ui.buttonBg,
-          color: ui.buttonText,
-          cursor: "pointer",
-        }}
-      >
-        Complete
-      </button>
-    )}
+                {/* Kid-visible action: Complete */}
+                <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                  {t.isComplete ? (
+                    <span style={{ fontSize: 12, color: ui.subtleText }}>Completed</span>
+                  ) : (
+                    <button
+                      onClick={() => onCompleteTask(t.id)}
+                      style={{
+                        padding: "8px 12px",
+                        borderRadius: 10,
+                        border: `1px solid ${ui.border}`,
+                        background: ui.buttonBg,
+                        color: ui.buttonText,
+                        cursor: "pointer",
+                        fontWeight: 700,
+                      }}
+                    >
+                      Complete
+                    </button>
+                  )}
 
-    {/* Parent controls */}
-    {isParentMode &&
-      (editingTaskId === t.id ? (
-        <>
-          <button
-            onClick={() => onSaveTask(t.id)}
-            style={{
-              padding: "6px 10px",
-              borderRadius: 8,
-              border: `1px solid ${ui.border}`,
-              background: ui.buttonBg,
-              color: ui.buttonText,
-              cursor: "pointer",
-            }}
-          >
-            Save
-          </button>
-          <button
-            onClick={cancelEditTask}
-            style={{
-              padding: "6px 10px",
-              borderRadius: 8,
-              border: `1px solid ${ui.border}`,
-              background: ui.buttonBg,
-              color: ui.buttonText,
-              cursor: "pointer",
-            }}
-          >
-            Cancel
-          </button>
-        </>
-      ) : (
-        <>
-          <button
-            onClick={() => startEditTask(t)}
-            style={{
-              padding: "6px 10px",
-              borderRadius: 8,
-              border: `1px solid ${ui.border}`,
-              background: ui.buttonBg,
-              color: ui.buttonText,
-              cursor: "pointer",
-            }}
-          >
-            Edit
-          </button>
-          <button
-            onClick={() => onDeleteTask(t.id)}
-            style={{
-              padding: "6px 10px",
-              borderRadius: 8,
-              border: `1px solid ${ui.border}`,
-              background: ui.dangerBg,
-              color: ui.dangerText,
-              cursor: "pointer",
-            }}
-          >
-            Delete
-          </button>
-        </>
-      ))}
-  </div>
-
-</li>
-
+                  {/* Parent-only actions */}
+                  {isParentMode &&
+                    (editingTaskId === t.id ? (
+                      <>
+                        <button
+                          onClick={() => onSaveTask(t.id)}
+                          style={{
+                            padding: "8px 12px",
+                            borderRadius: 10,
+                            border: `1px solid ${ui.border}`,
+                            background: ui.buttonBg,
+                            color: ui.buttonText,
+                            cursor: "pointer",
+                            fontWeight: 700,
+                          }}
+                        >
+                          Save
+                        </button>
+                        <button
+                          onClick={cancelEditTask}
+                          style={{
+                            padding: "8px 12px",
+                            borderRadius: 10,
+                            border: `1px solid ${ui.border}`,
+                            background: ui.buttonBg,
+                            color: ui.buttonText,
+                            cursor: "pointer",
+                            fontWeight: 700,
+                          }}
+                        >
+                          Cancel
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <button
+                          onClick={() => startEditTask(t)}
+                          style={{
+                            padding: "8px 12px",
+                            borderRadius: 10,
+                            border: `1px solid ${ui.border}`,
+                            background: ui.buttonBg,
+                            color: ui.buttonText,
+                            cursor: "pointer",
+                            fontWeight: 700,
+                          }}
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => onDeleteTask(t.id)}
+                          style={{
+                            padding: "8px 12px",
+                            borderRadius: 10,
+                            border: `1px solid ${ui.border}`,
+                            background: ui.dangerBg,
+                            color: ui.dangerText,
+                            cursor: "pointer",
+                            fontWeight: 700,
+                          }}
+                        >
+                          Delete
+                        </button>
+                      </>
+                    ))}
+                </div>
+              </li>
             ))}
           </ul>
         )}
       </div>
 
-      {/* Rewards */}
-      <div style={{ border: "1px solid #eee", borderRadius: 12, padding: 14, marginBottom: 18 }}>
-        <h2 style={{ marginTop: 0 }}>Rewards</h2>
+      {/* Rewards card */}
+      <div
+        style={{
+          border: `1px solid ${ui.border}`,
+          borderRadius: 14,
+          padding: 16,
+          marginBottom: 18,
+          background: ui.card,
+        }}
+      >
+        <h2 style={{ marginTop: 0, marginBottom: 10 }}>Rewards</h2>
 
         {rewards.length === 0 ? (
-          <p>No rewards yet.</p>
+          <p style={{ color: ui.subtleText }}>No rewards yet.</p>
         ) : (
           <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
             {rewards.map((r) => (
-<li
-  key={r.id}
-  style={{
-    display: "flex",
-    alignItems: "center",
-    gap: 10,
-    padding: 10,
-    borderBottom: "1px solid #f1f1f1",
-  }}
->
-  <div style={{ flex: 1 }}>
-    {editingRewardId === r.id ? (
-      <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-        <input
-          value={editRewardName}
-          onChange={(e) => setEditRewardName(e.target.value)}
-          style={{ padding: 6, borderRadius: 8, border: "1px solid #ccc", flex: 1 }}
-        />
-        <input
-          type="number"
-          value={editRewardCost}
-          onChange={(e) => setEditRewardCost(Number(e.target.value))}
-          min={0}
-          style={{ padding: 6, borderRadius: 8, border: "1px solid #ccc", width: 90 }}
-        />
-      </div>
-    ) : (
-      <span>
-        {r.name} <span style={{ opacity: 0.7 }}>({r.cost} pts)</span>
-      </span>
-    )}
-  </div>
+              <li
+                key={r.id}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 10,
+                  padding: 12,
+                  borderBottom: `1px solid ${ui.border}`,
+                }}
+              >
+                <div style={{ flex: 1 }}>
+                  {editingRewardId === r.id ? (
+                    <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                      <input
+                        value={editRewardName}
+                        onChange={(e) => setEditRewardName(e.target.value)}
+                        style={{
+                          padding: 10,
+                          borderRadius: 10,
+                          border: `1px solid ${ui.border}`,
+                          background: ui.bg,
+                          color: ui.text,
+                          flex: 1,
+                        }}
+                      />
+                      <input
+                        type="number"
+                        value={editRewardCost}
+                        onChange={(e) => setEditRewardCost(Number(e.target.value))}
+                        min={0}
+                        style={{
+                          padding: 10,
+                          borderRadius: 10,
+                          border: `1px solid ${ui.border}`,
+                          background: ui.bg,
+                          color: ui.text,
+                          width: 110,
+                        }}
+                      />
+                    </div>
+                  ) : (
+                    <span>
+                      {r.name} <span style={{ color: ui.subtleText }}>({r.cost} pts)</span>
+                    </span>
+                  )}
+                </div>
 
-  {isParentMode ? (
-    editingRewardId === r.id ? (
-      <div style={{ display: "flex", gap: 8 }}>
-        <button onClick={() => onSaveReward(r.id)} style={{ padding: "6px 10px", borderRadius: 8 }}>
-          Save
-        </button>
-        <button onClick={cancelEditReward} style={{ padding: "6px 10px", borderRadius: 8 }}>
-          Cancel
-        </button>
-      </div>
-    ) : (
-      <div style={{ display: "flex", gap: 8 }}>
-        <button onClick={() => startEditReward(r)} style={{ padding: "6px 10px", borderRadius: 8 }}>
-          Edit
-        </button>
-        <button onClick={() => onDeleteReward(r.id)} style={{ padding: "6px 10px", borderRadius: 8 }}>
-          Delete
-        </button>
-      </div>
-    )
-  ) : (
-    <button
-      disabled={points < r.cost}
-      onClick={() => onRedeem(r.id)}
-      style={{ padding: "6px 10px", borderRadius: 8 }}
-    >
-      Redeem
-    </button>
-  )}
-</li>
-
+                {isParentMode ? (
+                  editingRewardId === r.id ? (
+                    <div style={{ display: "flex", gap: 8 }}>
+                      <button
+                        onClick={() => onSaveReward(r.id)}
+                        style={{
+                          padding: "8px 12px",
+                          borderRadius: 10,
+                          border: `1px solid ${ui.border}`,
+                          background: ui.buttonBg,
+                          color: ui.buttonText,
+                          cursor: "pointer",
+                          fontWeight: 700,
+                        }}
+                      >
+                        Save
+                      </button>
+                      <button
+                        onClick={cancelEditReward}
+                        style={{
+                          padding: "8px 12px",
+                          borderRadius: 10,
+                          border: `1px solid ${ui.border}`,
+                          background: ui.buttonBg,
+                          color: ui.buttonText,
+                          cursor: "pointer",
+                          fontWeight: 700,
+                        }}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  ) : (
+                    <div style={{ display: "flex", gap: 8 }}>
+                      <button
+                        onClick={() => startEditReward(r)}
+                        style={{
+                          padding: "8px 12px",
+                          borderRadius: 10,
+                          border: `1px solid ${ui.border}`,
+                          background: ui.buttonBg,
+                          color: ui.buttonText,
+                          cursor: "pointer",
+                          fontWeight: 700,
+                        }}
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => onDeleteReward(r.id)}
+                        style={{
+                          padding: "8px 12px",
+                          borderRadius: 10,
+                          border: `1px solid ${ui.border}`,
+                          background: ui.dangerBg,
+                          color: ui.dangerText,
+                          cursor: "pointer",
+                          fontWeight: 700,
+                        }}
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  )
+                ) : (
+                  <button
+                    disabled={points < r.cost}
+                    onClick={() => onRedeem(r.id)}
+                    style={{
+                      padding: "8px 12px",
+                      borderRadius: 10,
+                      border: `1px solid ${ui.border}`,
+                      background: ui.buttonBg,
+                      color: ui.buttonText,
+                      cursor: points < r.cost ? "not-allowed" : "pointer",
+                      fontWeight: 700,
+                      opacity: points < r.cost ? 0.5 : 1,
+                    }}
+                  >
+                    Redeem
+                  </button>
+                )}
+              </li>
             ))}
           </ul>
         )}
       </div>
 
-      {/* Parent admin (only show if Parent is active) */}
+      {/* Parent admin */}
       {isParentMode && !!auth?.parentToken && (
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-          <div style={{ border: "1px solid #eee", borderRadius: 12, padding: 14 }}>
+          <div
+            style={{
+              border: `1px solid ${ui.border}`,
+              borderRadius: 14,
+              padding: 16,
+              background: ui.card,
+            }}
+          >
             <h3 style={{ marginTop: 0 }}>Parent: Create Task</h3>
             <form onSubmit={onCreateTask} style={{ display: "grid", gap: 10 }}>
               <input
                 value={taskTitle}
                 onChange={(e) => setTaskTitle(e.target.value)}
                 placeholder="Task title (e.g., Brush teeth)"
-                style={{ padding: 8, borderRadius: 8, border: "1px solid #ccc" }}
+                style={{
+                  padding: 10,
+                  borderRadius: 10,
+                  border: `1px solid ${ui.border}`,
+                  background: ui.bg,
+                  color: ui.text,
+                }}
               />
               <input
                 type="number"
                 value={taskPoints}
                 onChange={(e) => setTaskPoints(Number(e.target.value))}
                 min={0}
-                style={{ padding: 8, borderRadius: 8, border: "1px solid #ccc" }}
+                style={{
+                  padding: 10,
+                  borderRadius: 10,
+                  border: `1px solid ${ui.border}`,
+                  background: ui.bg,
+                  color: ui.text,
+                }}
               />
-              <button type="submit" style={{ padding: "8px 12px", borderRadius: 8 }}>
-                Add Task for Current Kid
+              <button
+                type="submit"
+                style={{
+                  padding: "10px 12px",
+                  borderRadius: 10,
+                  border: `1px solid ${ui.border}`,
+                  background: ui.buttonBg,
+                  color: ui.buttonText,
+                  cursor: "pointer",
+                  fontWeight: 800,
+                }}
+              >
+                Add Task
               </button>
             </form>
           </div>
 
-          <div style={{ border: "1px solid #eee", borderRadius: 12, padding: 14 }}>
+          <div
+            style={{
+              border: `1px solid ${ui.border}`,
+              borderRadius: 14,
+              padding: 16,
+              background: ui.card,
+            }}
+          >
             <h3 style={{ marginTop: 0 }}>Parent: Create Reward</h3>
             <form onSubmit={onCreateReward} style={{ display: "grid", gap: 10 }}>
               <input
                 value={rewardName}
                 onChange={(e) => setRewardName(e.target.value)}
                 placeholder="Reward name (e.g., 30 mins game time)"
-                style={{ padding: 8, borderRadius: 8, border: "1px solid #ccc" }}
+                style={{
+                  padding: 10,
+                  borderRadius: 10,
+                  border: `1px solid ${ui.border}`,
+                  background: ui.bg,
+                  color: ui.text,
+                }}
               />
               <input
                 type="number"
                 value={rewardCost}
                 onChange={(e) => setRewardCost(Number(e.target.value))}
                 min={0}
-                style={{ padding: 8, borderRadius: 8, border: "1px solid #ccc" }}
+                style={{
+                  padding: 10,
+                  borderRadius: 10,
+                  border: `1px solid ${ui.border}`,
+                  background: ui.bg,
+                  color: ui.text,
+                }}
               />
-              <button type="submit" style={{ padding: "8px 12px", borderRadius: 8 }}>
+              <button
+                type="submit"
+                style={{
+                  padding: "10px 12px",
+                  borderRadius: 10,
+                  border: `1px solid ${ui.border}`,
+                  background: ui.buttonBg,
+                  color: ui.buttonText,
+                  cursor: "pointer",
+                  fontWeight: 800,
+                }}
+              >
                 Add Reward
               </button>
             </form>
@@ -714,5 +892,6 @@ if (!effectiveKidId) {
         </div>
       )}
     </div>
-  );
+  </div>
+);
 }
