@@ -15,12 +15,14 @@ export default function App() {
   window.matchMedia &&
   window.matchMedia("(prefers-color-scheme: dark)").matches;
 
+  
+
 const theme = {
-  bg: isDark ? "#0b0f19" : "#ffffff",
+  bg: isDark ? "#0b0f19" : "rgba(255,255,255,0.75)",
   text: isDark ? "#e5e7eb" : "#0f172a",
   border: isDark ? "rgba(148,163,184,0.25)" : "rgba(15,23,42,0.15)",
-  pillBg: isDark ? "rgba(148,163,184,0.08)" : "rgba(15,23,42,0.04)",
-  pillActiveBg: isDark ? "rgba(99,102,241,0.25)" : "rgba(99,102,241,0.15)",
+  pillBg: isDark ? "rgba(148,163,184,0.08)" : "rgba(15,23,42,0.08)",
+  pillActiveBg: isDark ? "rgba(99,102,241,0.25)" : "rgba(99,102,241,0.18)",
 };
 
 
@@ -82,7 +84,8 @@ const topBtn: React.CSSProperties = {
   fontWeight: 800,
 };
 
-
+// Finish const declarations
+//begin function declarations
 
   function clearAuth() {
     setAuth({
@@ -115,8 +118,17 @@ const topBtn: React.CSSProperties = {
     setAuth((prev) => ({ ...prev, uiMode: "Kid" }));
   }
 
+  // Begin background and nav bar
   return (
-    <div style={{ minHeight: "100vh", fontFamily: "system-ui" }}>
+<div
+  style={{
+    minHeight: "100vh",
+    fontFamily: "system-ui",
+    background: isDark ? "#0b0f19" : "#f8fafc",
+    color: isDark ? "#e5e7eb" : "#0f172a",
+  }}
+>
+
       {/* Top bar */}
 <div
   style={{
