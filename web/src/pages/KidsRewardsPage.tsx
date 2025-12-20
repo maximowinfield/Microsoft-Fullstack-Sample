@@ -42,18 +42,19 @@ export default function KidsRewardsPage() {
     window.matchMedia &&
     window.matchMedia("(prefers-color-scheme: dark)").matches;
 
-  const ui = {
-    bg: isDark ? "#0b0f19" : "#ffffff",
-    text: isDark ? "#e5e7eb" : "#111827",
-    card: isDark ? "#111827" : "#ffffff",
-    border: isDark ? "#253042" : "#e5e7eb",
-    subtleText: isDark ? "rgba(229,231,235,0.7)" : "rgba(17,24,39,0.7)",
-    link: isDark ? "#93c5fd" : "#2563eb",
-    buttonBg: isDark ? "#0b1220" : "#f9fafb",
-    buttonText: isDark ? "#e5e7eb" : "#111827",
-    dangerBg: isDark ? "#3a1212" : "#fff1f2",
-    dangerText: isDark ? "#fecaca" : "#9f1239",
-  };
+const ui = {
+  bg: isDark ? "#0b0f19" : "#f8fafc",       // ⬅ softer light bg
+  text: isDark ? "#e5e7eb" : "#0f172a",
+  card: isDark ? "#0f172a" : "#ffffff",
+  border: isDark ? "#1e293b" : "#e2e8f0",  // ⬅ lighter borders
+  subtleText: isDark ? "#94a3b8" : "#64748b",
+  link: isDark ? "#93c5fd" : "#2563eb",
+  buttonBg: isDark ? "#020617" : "#ffffff",
+  buttonText: isDark ? "#e5e7eb" : "#0f172a",
+  dangerBg: isDark ? "#3a1212" : "#fee2e2",
+  dangerText: isDark ? "#fecaca" : "#991b1b",
+};
+
 
 useEffect(() => {
   (async () => {
@@ -393,9 +394,10 @@ return (
       minHeight: "calc(100vh - 80px)",
       background: ui.bg,
       color: ui.text,
-      padding: "24px 16px",
+      padding: "32px 16px",
     }}
   >
+        {/* 2️⃣ Content container (centered, max width) */}
     <div style={{ maxWidth: 980, margin: "0 auto", fontFamily: "system-ui" }}>
       {/* Error banner */}
       {error && (
