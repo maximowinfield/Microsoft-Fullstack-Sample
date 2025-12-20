@@ -1,51 +1,102 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { parentLogin, setApiToken } from "../api";
+import { parentLogin } from "../api";
 
 export default function Login() {
   const { setAuth } = useAuth();
   const navigate = useNavigate();
 
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
+  // ✅ Demo env (Vite)
+  const demoEnabled = import.meta.env.VITE_DEMO_ENABLED === "true";
+  const demoUser = import.meta.env.VITE_DEMO_USERNAME ?? "";
+  const demoPass = import.meta.env.VITE_DEMO_PASSWORD ?? "";
 
-async function login() {
-  try {
-    const data = await parentLogin({ username, password });
+  // ✅ Prefill only when demo is enabled
+  const initialUsername = useMemo(() => (demoEnabled ? demoUser : ""), [demoEnabled, demoUser]);
+  const initialPassword = useMemo(() => (demoEnabled ? demoPass : ""), [demoEnabled, demoPass]);
 
-    setAuth((prev: any) => ({
-      ...prev,
-      parentToken: data.token,
-      activeRole: "Parent",
+  const [username, setUsername] = useState(initialUsername);
+  const [password, setPassword] = useState(initialPassword);
 
-      // optional: if switching accounts, clear kid mode
-      kidToken: null,
-      kidId: undefined,
-      kidName: undefined,
-    }));
+  async function login() {
+    try {
+      const data = await parentLogin({ username, password });
 
-    navigate("/parent/kids", { replace: true });
-  } catch (err: any) {
-    alert(err?.message || "Login failed");
+      setAuth((prev: any) => ({
+        ...prev,
+        parentToken: data.token,
+        activeRole: "Parent",
+
+        // ✅ clear any kid selection/session state (UI mode only)
+        kidId: undefined,
+        kidName: undefined,
+        selectedKidId: undefined,
+        selectedKidName: undefined,
+      }));
+
+      navigate("/parent/kids", { replace: true });
+    } catch (err: any) {
+      alert(err?.message || "Login failed");
+    }
   }
-}
-
-console.log("Demo enabled:", import.meta.env.VITE_DEMO_ENABLED);
 
   return (
-    <div>
-      <h2>Parent Login</h2>
-      <input
-        placeholder="Username"
-        onChange={(e) => setUsername(e.target.value)}
-      />
-      <input
-        type="password"
-        placeholder="Password"
-        onChange={(e) => setPassword(e.target.value)}
-      />
-      <button onClick={login}>Login</button>
+    <div style={{ fontFamily: "system-ui", maxWidth: 420, margin: "60px auto", padding: 16 }}>
+      <h2 style={{ marginTop: 0 }}>Parent Login</h2>
+
+      {demoEnabled && (
+        <div
+          style={{
+            border: "1px solid #e5e7eb",
+            borderRadius: 10,
+            padding: 12,
+            marginBottom: 12,
+            background: "#f8fafc",
+            color: "#0f172a",
+          }}
+        >
+          <div style={{ fontWeight: 600, marginBottom: 6 }}>Demo credentials</div>
+          <div>
+            <strong>Username:</strong> {demoUser}
+          </div>
+          <div>
+            <strong>Password:</strong> {demoPass}
+          </div>
+        </div>
+      )}
+
+      <div style={{ display: "grid", gap: 10 }}>
+        <input
+          placeholder="Username"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          autoComplete="username"
+          style={{ padding: 10, borderRadius: 10, border: "1px solid #cbd5e1" }}
+        />
+
+        <input
+          type="password"
+          placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          autoComplete="current-password"
+          style={{ padding: 10, borderRadius: 10, border: "1px solid #cbd5e1" }}
+        />
+
+        <button
+          onClick={login}
+          style={{
+            padding: 10,
+            borderRadius: 10,
+            border: "1px solid #cbd5e1",
+            cursor: "pointer",
+            fontWeight: 600,
+          }}
+        >
+          Login
+        </button>
+      </div>
     </div>
   );
 }
