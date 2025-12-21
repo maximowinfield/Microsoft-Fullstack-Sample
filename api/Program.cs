@@ -151,7 +151,7 @@ using (var scope = app.Services.CreateScope())
             Username = "parent1",
             Role = "Parent"
         };
-        parent.PasswordHash = hasher.HashPassword(parent, "ChangeMe123!");
+        parent.PasswordHash = hasher.HashPassword(parent, "ChangeMe123");
         db.Users.Add(parent);
         db.SaveChanges();
     }
