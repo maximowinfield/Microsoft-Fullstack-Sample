@@ -579,26 +579,32 @@ api.MapGet("/todos", async (AppDbContext db) =>
 
 api.MapPost("/todos", async (AppDbContext db, TodoItem todo) =>
 {
+    if (string.IsNullOrWhiteSpace(todo.Title))
+        return Results.BadRequest("Title is required.");
+
     todo.Id = 0;
+    todo.Title = todo.Title.Trim();
+
     db.Todos.Add(todo);
     await db.SaveChangesAsync();
     return Results.Created($"/api/todos/{todo.Id}", todo);
 })
 .RequireAuthorization();
 
-api.MapPut("/todos/{id:int}", async (AppDbContext db, int id, TodoItem updated) =>
+api.MapPut("/todos/{id:int}", async (AppDbContext db, int id, UpdateTodoRequest updated) =>
 {
     var todo = await db.Todos.FirstOrDefaultAsync(t => t.Id == id);
     if (todo is null) return Results.NotFound();
 
-    // ✅ Only validate title if it was provided (allows toggle-only updates)
+    // ✅ Validate only if Title was sent
     if (updated.Title is not null && string.IsNullOrWhiteSpace(updated.Title))
         return Results.BadRequest("Title cannot be empty.");
 
     if (updated.Title is not null)
         todo.Title = updated.Title.Trim();
 
-    todo.IsDone = updated.IsDone;
+    if (updated.IsDone is not null)
+        todo.IsDone = updated.IsDone.Value;
 
     await db.SaveChangesAsync();
     return Results.Ok(todo);
@@ -616,6 +622,7 @@ api.MapDelete("/todos/{id:int}", async (AppDbContext db, int id) =>
 })
 .RequireAuthorization();
 
+
 // -------------------- ✅ SPA fallback (deep links) --------------------
 app.MapFallbackToFile("index.html");
 
@@ -628,3 +635,4 @@ app.Run();
 
 public record UpdateTaskRequest(string? Title, int? Points, string? AssignedKidId);
 public record UpdateRewardRequest(string? Name, int? Cost);
+public record UpdateTodoRequest(string? Title, bool? IsDone);
