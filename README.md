@@ -1,18 +1,20 @@
 # ✨ Microsoft Full-Stack Sample
+
 ## React + TypeScript + .NET 8 Minimal API + EF Core + Docker
 
 A modern full-stack application demonstrating Microsoft’s ecosystem end-to-end.  
 This project evolved from a simple todo app into a **persistent kids task and rewards system**, showcasing real-world frontend routing, backend persistence, and cloud deployment.
 
 ### User: parent1
-### Password: ChangeMe123!
+
+### Password: ChangeMe123
 
 ---
 
 ## 🚀 Live Demo
 
-| Component | URL |
-|---------|-----|
+| Component                   | URL                                             |
+| --------------------------- | ----------------------------------------------- |
 | **Frontend (GitHub Pages)** | https://microsoft-fullstack-sample.onrender.com |
 
 > ⚠️ The API may take 3–5 seconds to wake up on first request (Render free tier).
@@ -22,6 +24,7 @@ This project evolved from a simple todo app into a **persistent kids task and re
 ## 🧰 Tech Stack
 
 ### Frontend
+
 - React 18 + TypeScript
 - Vite build tooling
 - React Router (multi-page SPA)
@@ -29,6 +32,7 @@ This project evolved from a simple todo app into a **persistent kids task and re
 - GitHub Pages (subpath deployment)
 
 ### Backend
+
 - .NET 8 Minimal API
 - Entity Framework Core
 - SQLite database with migrations
@@ -41,6 +45,7 @@ This project evolved from a simple todo app into a **persistent kids task and re
 - Automatic database initialization and seeding
 
 ### DevOps / Hosting
+
 - Docker Compose for local full-stack development
 - CI/CD with GitHub Actions
 - Deployed to:
@@ -92,9 +97,10 @@ The architecture mirrors common Microsoft full-stack patterns used in real-world
 git clone https://github.com/maximowinfield/Microsoft-Fullstack-Sample.git
 cd Microsoft-Fullstack-Sample
 ```
-### 2️⃣ Run using Docker Compose
-docker compose up --build
 
+### 2️⃣ Run using Docker Compose
+
+docker compose up --build
 
 Once running:
 
@@ -109,13 +115,11 @@ Start backend:
 cd api
 dotnet run
 
-
 Start frontend:
 
 cd web
 npm install
 npm run dev
-
 
 Then access:
 
@@ -128,12 +132,13 @@ API → http://localhost:5000
 The API exposes endpoints for kids, tasks, rewards, points, redemptions, and todos.
 Below are the core endpoints used by the demo UI.
 
-Method	Route	Description
-GET	/api/health	Health check
-GET	/api/todos	Fetch todos
-POST	/api/todos	Create a todo
-PUT	/api/todos/{id}	Update a todo
-DELETE	/api/todos/{id}	Delete a todo
+Method Route Description
+GET /api/health Health check
+GET /api/todos Fetch todos
+POST /api/todos Create a todo
+PUT /api/todos/{id} Update a todo
+DELETE /api/todos/{id} Delete a todo
+
 ```
 ┌────────────┐      HTTP       ┌───────────────┐
 │  React UI  │ <------------> │ .NET 8 API    │
@@ -165,8 +170,8 @@ If the secret is too short, the API will throw a runtime exception during login 
 
 ## Required Environment Variable
 
-
 Backend:
+
 ```
 
 JWT_SECRET=your-secure-secret-at-least-32-characters-long
@@ -187,7 +192,7 @@ Frontend: GitHub Pages
 Backend: Render
 
 Cross-Origin Resource Sharing (CORS) is explicitly configured in the API.
-All /api/* routes are grouped and protected with a consistent CORS policy to ensure:
+All /api/\* routes are grouped and protected with a consistent CORS policy to ensure:
 
 Successful preflight (OPTIONS) requests
 
