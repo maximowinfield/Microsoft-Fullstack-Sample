@@ -53,12 +53,19 @@ export default function TodosPage(): JSX.Element {
       {error && <div style={{ color: "red", marginBottom: 12 }}>{error}</div>}
 
       <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
-        <input
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder="New todo"
-          style={{ flex: 1, padding: 8 }}
-        />
+<input
+  value={title}
+  onChange={(e) => setTitle(e.target.value)}
+  onKeyDown={(e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      void addTodo();
+    }
+  }}
+  placeholder="New todo"
+  style={{ flex: 1, padding: 8 }}
+/>
+
         <button onClick={addTodo} style={{ padding: "8px 12px" }}>
           Add
         </button>
