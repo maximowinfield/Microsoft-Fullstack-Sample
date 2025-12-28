@@ -266,13 +266,34 @@ api.MapPost("/kid-session", async (ClaimsPrincipal principal, AppDbContext db, K
 
 api.MapGet("/kids", async (ClaimsPrincipal principal, AppDbContext db) =>
 {
-    var parentId = GetUserId(principal);
-    if (string.IsNullOrWhiteSpace(parentId)) return Results.Unauthorized();
+    try
+    {
+        var parentId = GetUserId(principal);
+        if (string.IsNullOrWhiteSpace(parentId))
+            return Results.Unauthorized();
 
-    var kids = await db.Kids.Where(k => k.ParentId == parentId).ToListAsync();
-    return Results.Ok(kids);
+        // ✅ DEBUG: confirm DB has kids + parent filter works
+        Console.WriteLine($"[GET /api/kids] parentId={parentId}");
+        Console.WriteLine($"[GET /api/kids] totalKids={await db.Kids.CountAsync()}");
+        Console.WriteLine($"[GET /api/kids] kidsForParent={await db.Kids.CountAsync(k => k.ParentId == parentId)}");
+
+        var kids = await db.Kids
+            .Where(k => k.ParentId == parentId)
+            .OrderBy(k => k.DisplayName)
+            .ToListAsync();
+
+        return Results.Ok(kids);
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine("❌ /api/kids failed:");
+        Console.WriteLine(ex.ToString());
+        return Results.Problem(ex.Message);
+    }
 })
 .RequireAuthorization("ParentOnly");
+
+
 
 api.MapPost("/kids", async (ClaimsPrincipal principal, AppDbContext db, CreateKidRequest req) =>
 {
