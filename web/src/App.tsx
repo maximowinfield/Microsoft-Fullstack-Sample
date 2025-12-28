@@ -1,4 +1,4 @@
-// src/App.tsx
+// src/App.tsx 12/28/2025
 import React from "react";
 import { Link, Routes, Route, Navigate, useLocation, useNavigate } from "react-router-dom";
 import KidsRewardsPage from "./pages/KidsRewardsPage";
