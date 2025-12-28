@@ -428,6 +428,12 @@ api.MapPut("/tasks/{id:int}/complete", async (ClaimsPrincipal principal, AppDbCo
     task.IsComplete = true;
     task.CompletedAt = DateTime.UtcNow;
 
+    var kid = await db.Kids.FirstOrDefaultAsync(k => k.Id == kidId);
+    if (kid is null) return Results.NotFound("Kid not found.");
+
+    kid.PointsBalance += task.Points;
+
+
     await db.SaveChangesAsync();
     return Results.Ok(task);
 })
@@ -544,21 +550,19 @@ api.MapPost("/rewards/{rewardId:int}/redeem", async (ClaimsPrincipal principal, 
     var kidId = principal.FindFirstValue("kidId") ?? GetUserId(principal);
     if (string.IsNullOrWhiteSpace(kidId)) return Results.Unauthorized();
 
+    var kid = await db.Kids.FirstOrDefaultAsync(k => k.Id == kidId);
+    if (kid is null) return Results.NotFound("Kid not found.");
+
     var reward = await db.Rewards.FirstOrDefaultAsync(r => r.Id == rewardId);
     if (reward is null) return Results.NotFound("Reward not found.");
 
-    var earned = await db.Tasks
-        .Where(t => t.AssignedKidId == kidId && t.IsComplete)
-        .SumAsync(t => (int?)t.Points) ?? 0;
+    if (kid.PointsBalance < reward.Cost)
+        return Results.BadRequest("Not enough points.");
 
-    var spent = await (from red in db.Redemptions
-                       join rw in db.Rewards on red.RewardId equals rw.Id
-                       where red.KidId == kidId
-                       select (int?)rw.Cost).SumAsync() ?? 0;
+    // ✅ Deduct from saved balance
+    kid.PointsBalance -= reward.Cost;
 
-    var currentPoints = earned - spent;
-    if (currentPoints < reward.Cost) return Results.BadRequest("Not enough points.");
-
+    // ✅ Keep redemption history
     var redemption = new Redemption
     {
         KidId = kidId,
@@ -569,9 +573,10 @@ api.MapPost("/rewards/{rewardId:int}/redeem", async (ClaimsPrincipal principal, 
     db.Redemptions.Add(redemption);
     await db.SaveChangesAsync();
 
-    return Results.Ok(new { kidId, newPoints = currentPoints - reward.Cost, redemption });
+    return Results.Ok(new { kidId, newPoints = kid.PointsBalance, redemption });
 })
 .RequireAuthorization("KidOnly");
+
 
 // -------------------- Todos --------------------
 
