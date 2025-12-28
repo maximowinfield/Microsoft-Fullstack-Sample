@@ -592,14 +592,33 @@ api.MapPost("/todos", async (AppDbContext db, TodoItem todo) =>
     await db.SaveChangesAsync();
     return Results.Created($"/api/todos/{todo.Id}", todo);
 })
-.RequireAuthorization(policy => policy.RequireRole("Parent", "Kid"));
+.RequireAuthorization("ParentOnly");
 
-api.MapPut("/todos/{id:int}", async (AppDbContext db, int id, UpdateTodoRequest updated) =>
+api.MapPut("/todos/{id:int}", async (ClaimsPrincipal principal, AppDbContext db, int id, UpdateTodoRequest updated) =>
 {
+    var role = principal.FindFirstValue(ClaimTypes.Role);
+
+    if (string.IsNullOrWhiteSpace(role))
+        return Results.Forbid();
+
     var todo = await db.Todos.FirstOrDefaultAsync(t => t.Id == id);
     if (todo is null) return Results.NotFound();
 
-    // ✅ Validate only if Title was sent
+    // ✅ Kids can ONLY toggle IsDone (and cannot change Title)
+    if (role == "Kid")
+    {
+        if (updated.Title is not null)
+            return Results.Forbid(); // or Results.BadRequest("Kids cannot edit titles.")
+
+        if (updated.IsDone is null)
+            return Results.BadRequest("IsDone is required.");
+
+        todo.IsDone = updated.IsDone.Value;
+        await db.SaveChangesAsync();
+        return Results.Ok(todo);
+    }
+
+    // ✅ Parent behavior (full edit)
     if (updated.Title is not null && string.IsNullOrWhiteSpace(updated.Title))
         return Results.BadRequest("Title cannot be empty.");
 
@@ -614,6 +633,7 @@ api.MapPut("/todos/{id:int}", async (AppDbContext db, int id, UpdateTodoRequest 
 })
 .RequireAuthorization(policy => policy.RequireRole("Parent", "Kid"));
 
+
 api.MapDelete("/todos/{id:int}", async (AppDbContext db, int id) =>
 {
     var todo = await db.Todos.FirstOrDefaultAsync(t => t.Id == id);
@@ -623,7 +643,7 @@ api.MapDelete("/todos/{id:int}", async (AppDbContext db, int id) =>
     await db.SaveChangesAsync();
     return Results.NoContent();
 })
-.RequireAuthorization(policy => policy.RequireRole("Parent", "Kid"));
+.RequireAuthorization("ParentOnly");
 
 
 // -------------------- ✅ SPA fallback (deep links) --------------------

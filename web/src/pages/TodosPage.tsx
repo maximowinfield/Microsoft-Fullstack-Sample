@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { api } from "../api";
+import { useAuth } from "../context/AuthContext";
 
 type TodoItem = {
   id: number;
@@ -7,10 +8,13 @@ type TodoItem = {
   isDone: boolean;
 };
 
+
 export default function TodosPage(): JSX.Element {
   const [todos, setTodos] = useState<TodoItem[]>([]);
   const [title, setTitle] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const { auth } = useAuth();
+  const canManageTodos = auth?.activeRole === "Parent";
 
   const loadTodos = async () => {
     try {
@@ -28,16 +32,18 @@ export default function TodosPage(): JSX.Element {
     void loadTodos();
   }, []);
 
-  const addTodo = async () => {
-    if (!title.trim()) return;
+const addTodo = async () => {
+  if (!canManageTodos) return;
+  if (!title.trim()) return;
 
-    await api.post("/todos", { title, isDone: false });
-    setTitle("");
-    await loadTodos();
-  };
+  await api.post("/todos", { title, isDone: false });
+  setTitle("");
+  await loadTodos();
+};
+
 
   const toggleTodo = async (todo: TodoItem) => {
-    await api.put(`/todos/${todo.id}`, { ...todo, isDone: !todo.isDone });
+    await api.put(`/todos/${todo.id}`, { isDone: !todo.isDone });
     await loadTodos();
   };
 
@@ -49,27 +55,37 @@ export default function TodosPage(): JSX.Element {
   return (
     <div style={{ maxWidth: 860, margin: "24px auto", padding: "0 16px" }}>
       <h2>Todos</h2>
+      {!canManageTodos && (
+  <div style={{ opacity: 0.8, marginBottom: 12 }}>
+    Check off your completed todos ✅
+  </div>
+)}
+
 
       {error && <div style={{ color: "red", marginBottom: 12 }}>{error}</div>}
 
-      <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
-<input
-  value={title}
-  onChange={(e) => setTitle(e.target.value)}
-  onKeyDown={(e) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      void addTodo();
-    }
-  }}
-  placeholder="New todo"
-  style={{ flex: 1, padding: 8 }}
-/>
+{canManageTodos && (
+  <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
+    <input
+      value={title}
+      onChange={(e) => setTitle(e.target.value)}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          void addTodo();
+        }
+      }}
+      placeholder="New todo"
+      style={{ flex: 1, padding: 8 }}
+    />
 
-        <button onClick={addTodo} style={{ padding: "8px 12px" }}>
-          Add
-        </button>
-      </div>
+    <button onClick={() => void addTodo()} style={{ padding: "8px 12px" }}>
+      Add
+    </button>
+  </div>
+)}
+
+
 
       <ul style={{ listStyle: "none", padding: 0 }}>
         {todos.map((t) => (
@@ -89,9 +105,12 @@ export default function TodosPage(): JSX.Element {
             <span style={{ flex: 1, textDecoration: t.isDone ? "line-through" : "none" }}>
               {t.title}
             </span>
-            <button onClick={() => void deleteTodo(t.id)} style={{ padding: "6px 10px" }}>
-              ✕
-            </button>
+{canManageTodos && (
+  <button onClick={() => void deleteTodo(t.id)} style={{ padding: "6px 10px" }}>
+    ✕
+  </button>
+)}
+
           </li>
         ))}
       </ul>
