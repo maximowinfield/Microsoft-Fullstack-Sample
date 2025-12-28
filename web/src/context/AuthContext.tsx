@@ -147,7 +147,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       uiMode: "Kid",
       activeRole: "Kid",
       kidToken: res.token,            // ✅ store kid token
-      selectedKidId: res.kidId,
+      selectedKidId: kidId,         // use the argument you passed in
       selectedKidName: res.displayName,
       kidId: res.kidId,
       kidName: res.displayName,

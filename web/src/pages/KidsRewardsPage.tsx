@@ -371,11 +371,10 @@ if (!effectiveKidId) {
     background: ui.buttonBg,
     color: ui.buttonText,
   }}
-  onClick={() =>
-    navigate(`${kidsBasePath}/${selectedKidId || String(kids[0].id)}`, {
-      replace: true,
-    })
-  }
+onClick={() =>
+  navigate(`${kidsBasePath}/${selectedKidId || String(kids[0].id)}`, { replace: true })
+}
+
 >
   Continue
 </button>
