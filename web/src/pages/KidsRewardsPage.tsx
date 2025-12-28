@@ -33,6 +33,8 @@ export default function KidsRewardsPage() {
   const [selectedKidId, setSelectedKidId] = useState<string>(auth?.selectedKidId ?? "");
   const isKidMode = auth?.uiMode === "Kid";
   const isParentMode = auth?.uiMode === "Parent";
+  const kidsBasePath = auth?.activeRole === "Kid" ? "/kid/kids" : "/parent/kids";
+
 
 
 
@@ -353,30 +355,31 @@ if (!effectiveKidId) {
                 selectedKidName: kid?.displayName,
               }));
 
-              navigate(`/parent/kids/${newKidId}`, { replace: true });
+              navigate(`${kidsBasePath}/${newKidId}`, { replace: true });
             }}
           />
         )}
 
         {kids.length > 0 && (
-          <button
-            style={{
-              marginLeft: "auto",
-              padding: "8px 12px",
-              borderRadius: 10,
-              cursor: "pointer",
-              border: `1px solid ${ui.border}`,
-              background: ui.buttonBg,
-              color: ui.buttonText,
-            }}
-            onClick={() =>
-              navigate(`/parent/kids/${selectedKidId || String(kids[0].id)}`, {
-                replace: true,
-              })
-            }
-          >
-            Continue
-          </button>
+<button
+  style={{
+    marginLeft: "auto",
+    padding: "8px 12px",
+    borderRadius: 10,
+    cursor: "pointer",
+    border: `1px solid ${ui.border}`,
+    background: ui.buttonBg,
+    color: ui.buttonText,
+  }}
+  onClick={() =>
+    navigate(`${kidsBasePath}/${selectedKidId || String(kids[0].id)}`, {
+      replace: true,
+    })
+  }
+>
+  Continue
+</button>
+
         )}
       </div>
     </div>
@@ -459,7 +462,8 @@ return (
           </div>
 
           <button
-            onClick={() => navigate("/parent/kids", { replace: true })}
+            onClick={() => navigate(kidsBasePath, { replace: true })}
+
             style={{
               border: `1px solid ${ui.border}`,
               background: ui.buttonBg,

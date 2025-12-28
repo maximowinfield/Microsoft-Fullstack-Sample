@@ -1,22 +1,25 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { setApiRoleToken, setApiToken, startKidSession } from "../api";
 
-type Role = "Parent" | "Kid";
-type UiMode = "Parent" | "Kid";
+
+export type ActiveRole = "Parent" | "Kid";
+export type UiMode = "Parent" | "Kid";
+
 
 export interface AuthState {
   parentToken: string | null;
-  kidToken: string | null;          // ✅ NEW
-  activeRole: Role | null;          // ✅ Parent or Kid (or null logged out)
-  uiMode: UiMode;
+  kidToken: string | null;
 
-  // optional session/meta
-  kidId?: string;
-  kidName?: string;
+  activeRole: ActiveRole | null; // ✅ SOURCE OF TRUTH
+  uiMode: UiMode;                // ✅ UI ONLY
 
   selectedKidId?: string;
   selectedKidName?: string;
+
+  kidId?: string;
+  kidName?: string;
 }
+
 
 type AuthContextValue = {
   auth: AuthState;
@@ -38,12 +41,13 @@ function emptyAuth(): AuthState {
     kidToken: null,
     activeRole: null,
     uiMode: "Kid",
-    kidId: undefined,
-    kidName: undefined,
     selectedKidId: undefined,
     selectedKidName: undefined,
+    kidId: undefined,
+    kidName: undefined,
   };
 }
+
 
 function loadAuth(): AuthState {
   try {
@@ -62,6 +66,7 @@ function loadAuth(): AuthState {
         ? parsed.kidToken
         : null;
 
+    // UI mode: keep if valid, else default based on parentToken existence
     const uiMode: UiMode =
       parsed.uiMode === "Parent" || parsed.uiMode === "Kid"
         ? parsed.uiMode
@@ -69,21 +74,9 @@ function loadAuth(): AuthState {
           ? "Parent"
           : "Kid";
 
-    // ✅ Keep activeRole if present and valid; otherwise infer
-    let activeRole: Role | null =
-      parsed.activeRole === "Parent" || parsed.activeRole === "Kid"
-        ? parsed.activeRole
-        : null;
-
-    if (!activeRole) {
-      if (uiMode === "Kid" && kidToken) activeRole = "Kid";
-      else if (parentToken) activeRole = "Parent";
-    }
-
-    // Safety: if role says Kid but no kidToken, fall back to Parent if possible
-    if (activeRole === "Kid" && !kidToken) {
-      activeRole = parentToken ? "Parent" : null;
-    }
+    // ✅ AUTH role: based ONLY on which token exists
+    const activeRole: ActiveRole | null =
+      kidToken ? "Kid" : parentToken ? "Parent" : null;
 
     return {
       parentToken,
@@ -100,6 +93,7 @@ function loadAuth(): AuthState {
     return emptyAuth();
   }
 }
+
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [auth, setAuth] = useState<AuthState>(() => {

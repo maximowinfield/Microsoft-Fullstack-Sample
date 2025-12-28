@@ -27,23 +27,24 @@ export default function App(): JSX.Element {
   };
 
   // Auth
-  const isAuthed = !!auth?.parentToken;
+  const isAuthed = !!auth?.parentToken || !!auth?.kidToken;
 
   // UI Mode (not auth)
   const isKidMode = auth?.uiMode === "Kid";
-  const isParentMode = auth?.uiMode === "Parent";
+  const isParentMode = auth?.activeRole === "Parent" && auth?.uiMode === "Parent";
 
   const selectedKidId = auth?.selectedKidId;
 
   // ---- Routes based on activeRole (not uiMode) ----
-  const kidsRewardsPath =
-    auth?.activeRole === "Kid"
-      ? selectedKidId
-        ? `/kid/kids/${selectedKidId}`
-        : "/"
-      : selectedKidId
-        ? `/parent/kids/${selectedKidId}`
-        : "/parent/kids";
+const kidsRewardsPath =
+  auth?.activeRole === "Kid"
+    ? selectedKidId
+      ? `/kid/kids/${selectedKidId}`
+      : "/kid/kids"
+    : selectedKidId
+      ? `/parent/kids/${selectedKidId}`
+      : "/parent/kids";
+
 
   // Nav pills
   const navPill: React.CSSProperties = {
@@ -155,7 +156,10 @@ export default function App(): JSX.Element {
               to={kidsRewardsPath}
               style={{
                 ...navPill,
-                ...(location.pathname.includes("/kids") ? navPillActive : {}),
+                ...((location.pathname.startsWith("/parent/kids") || location.pathname.startsWith("/kid/kids"))
+  ? navPillActive
+  : {}),
+
               }}
             >
               Kids + Rewards
@@ -203,71 +207,81 @@ export default function App(): JSX.Element {
         </div>
       </div>
 
-      <Routes>
-        {/* Default route */}
-        <Route
-          path="/"
-          element={
-            isAuthed ? (
-              auth?.activeRole === "Kid" ? (
-                selectedKidId ? (
-                  <Navigate to={`/kid/kids/${selectedKidId}`} replace />
-                ) : (
-                  <Navigate to="/parent/kids" replace />
-                )
-              ) : selectedKidId ? (
-                <Navigate to={`/parent/kids/${selectedKidId}`} replace />
-              ) : (
-                <Navigate to="/parent/kids" replace />
-              )
-            ) : (
-              <Navigate to="/login" replace />
-            )
-          }
-        />
+<Routes>
+  {/* Default route */}
+  <Route
+    path="/"
+    element={
+      isAuthed ? (
+        auth?.activeRole === "Kid" ? (
+          selectedKidId ? (
+            <Navigate to={`/kid/kids/${selectedKidId}`} replace />
+          ) : (
+            <Navigate to="/kid/kids" replace />
+          )
+        ) : selectedKidId ? (
+          <Navigate to={`/parent/kids/${selectedKidId}`} replace />
+        ) : (
+          <Navigate to="/parent/kids" replace />
+        )
+      ) : (
+        <Navigate to="/login" replace />
+      )
+    }
+  />
 
-        <Route path="/login" element={<Login />} />
+  <Route path="/login" element={<Login />} />
 
-        {/* Parent-only pages */}
-        <Route
-          path="/parent/kids"
-          element={
-            <RequireRole role="Parent">
-              <KidsRewardsPage />
-            </RequireRole>
-          }
-        />
+  {/* Parent-only pages */}
+  <Route
+    path="/parent/kids"
+    element={
+      <RequireRole role="Parent">
+        <KidsRewardsPage />
+      </RequireRole>
+    }
+  />
 
-        <Route
-          path="/parent/kids/:kidId"
-          element={
-            <RequireRole role="Parent">
-              <KidsRewardsPage />
-            </RequireRole>
-          }
-        />
+  <Route
+    path="/parent/kids/:kidId"
+    element={
+      <RequireRole role="Parent">
+        <KidsRewardsPage />
+      </RequireRole>
+    }
+  />
 
-        <Route
-          path="/parent/todos"
-          element={
-            <RequireRole role="Parent">
-              <TodosPage />
-            </RequireRole>
-          }
-        />
+  <Route
+    path="/parent/todos"
+    element={
+      <RequireRole role="Parent">
+        <TodosPage />
+      </RequireRole>
+    }
+  />
 
-        {/* Kid-only page */}
-        <Route
-          path="/kid/kids/:kidId"
-          element={
-            <RequireRole role="Kid">
-              <KidsRewardsPage />
-            </RequireRole>
-          }
-        />
+  {/* Kid-only pages */}
+  <Route
+    path="/kid/kids"
+    element={
+      <RequireRole role="Kid">
+        <KidsRewardsPage />
+      </RequireRole>
+    }
+  />
 
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+  <Route
+    path="/kid/kids/:kidId"
+    element={
+      <RequireRole role="Kid">
+        <KidsRewardsPage />
+      </RequireRole>
+    }
+  />
+
+  <Route path="*" element={<Navigate to="/" replace />} />
+</Routes>
+
     </div>
   );
 }
