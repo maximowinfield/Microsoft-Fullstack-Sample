@@ -28,9 +28,18 @@ export default function Login(): JSX.Element {
   const [username, setUsername] = useState(initialUsername);
   const [password, setPassword] = useState(initialPassword);
 
+  function fillDemo() {
+    setUsername(demoUser);
+    setPassword(demoPass);
+  }
+
+  function clearFields() {
+    setUsername("");
+    setPassword("");
+  }
+
   async function login() {
     try {
-      // ✅ Mobile-proof: avoid hidden spaces / autocap issues
       const cleanUsername = username.trim();
       const cleanPassword = password.trim();
 
@@ -45,13 +54,10 @@ export default function Login(): JSX.Element {
           parentToken: data.token,
           activeRole: "Parent" as const,
           uiMode: "Parent" as const,
-
-          // keep existing selection if present
           selectedKidId: prev.selectedKidId,
           selectedKidName: prev.selectedKidName,
         };
 
-        // ✅ Route based on updated state (not stale auth)
         const target = next.selectedKidId
           ? `/parent/kids/${next.selectedKidId}`
           : "/parent/select-kid";
@@ -61,7 +67,6 @@ export default function Login(): JSX.Element {
         return next;
       });
     } catch (err: any) {
-      // ✅ Better debugging for 401s (especially on mobile)
       const status = err?.response?.status;
       const body = err?.response?.data;
 
@@ -108,6 +113,38 @@ export default function Login(): JSX.Element {
           </div>
           <div>
             <strong>Parent Pin:</strong> {demoPin}
+          </div>
+
+          {/* ✅ Autofill + Clear buttons */}
+          <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
+            <button
+              type="button"
+              onClick={fillDemo}
+              style={{
+                padding: "8px 10px",
+                borderRadius: 10,
+                border: "1px solid #cbd5e1",
+                cursor: "pointer",
+                fontWeight: 600,
+                background: "white",
+              }}
+            >
+              Use demo login
+            </button>
+
+            <button
+              type="button"
+              onClick={clearFields}
+              style={{
+                padding: "8px 10px",
+                borderRadius: 10,
+                border: "1px solid #cbd5e1",
+                cursor: "pointer",
+                background: "white",
+              }}
+            >
+              Clear
+            </button>
           </div>
         </div>
       )}
